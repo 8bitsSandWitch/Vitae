@@ -27,7 +27,12 @@ const Register = () => {
       body: JSON.stringify(formData),
       credentials: 'include' // Include credentials in the request
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(data => {
         console.log('Success:', data);
         window.location.href = '/login'; // Redirect to login page

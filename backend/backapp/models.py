@@ -2,8 +2,20 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
 class Utilisateur(AbstractUser):
-    # Additional fields can be added here if needed
-    pass
+    groups = models.ManyToManyField(
+        Group,
+        related_name='utilisateur_set',  # Add related_name attribute
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups',
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='utilisateur_set',  # Add related_name attribute
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
 
 # Create groups and permissions
 def create_groups_and_permissions():
@@ -23,6 +35,3 @@ def create_groups_and_permissions():
         for perm in perms:
             permission = Permission.objects.get(codename=perm)
             group.permissions.add(permission)
-
-# Call the function to create groups and permissions
-create_groups_and_permissions()
