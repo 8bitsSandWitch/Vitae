@@ -1,3 +1,8 @@
+body {
+  background: #242424;
+  color: #fff;
+}
+
 .register-container {
   display: flex;
   flex-direction: column;
@@ -9,7 +14,11 @@
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   color: #fff;
-  width: 300px;
+  width: 30%;
+}
+
+form {
+  width: 100%;
 }
 
 .register-container h1 {
@@ -25,24 +34,26 @@
   margin-bottom: 5px;
 }
 
-.form-group input {
+.form-group input, .form-group select {
+  color: #fff;
+  background: #222;
   width: 100%;
   padding: 10px;
   border: none;
   border-radius: 5px;
 }
 
-button[type="submit"] {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #007bff;
+.form-group input:focus, .form-group select:focus {
   color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
+  background: #333;
+  outline: none;
 }
 
-button[type="submit"]:hover {
-  background: #0056b3;
+.flex-container {
+  display: flex;
+  gap: 1rem; /* Adjust the gap between the items as needed */
+}
+
+.flex-item {
+  flex: 1; /* Ensure the items take equal space */
 }

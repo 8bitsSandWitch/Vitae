@@ -1,0 +1,4 @@
+body {
+  background-color: #242424 !important; /* Use !important to enforce the style */
+  color: rgba(255, 255, 255, 0.87) !important; /* Ensure text color is set */
+}

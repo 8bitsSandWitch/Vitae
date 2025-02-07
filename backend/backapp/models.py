@@ -16,6 +16,11 @@ class Utilisateur(AbstractUser):
         help_text='Specific permissions for this user.',
         verbose_name='user permissions',
     )
+    type_utils = models.CharField(
+        max_length=255,
+        default='unassigned', 
+        verbose_name='Type of user'
+    )
 
 # Create groups and permissions
 def create_groups_and_permissions():

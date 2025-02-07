@@ -1,21 +1,84 @@
-import React from 'react';
+import React, { useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import '../CSS/login.css';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: ''
+  });
+
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    fetch('http://localhost:8000/login/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(formData),
+      credentials: 'include' // Include credentials in the request
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Success:', data);
+        // Handle successful login, e.g., redirect to dashboard
+        window.location.href = '/';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        setError('Invalid credentials');
+      });
+  };
+
+  const getCookie = (name) => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  };
+
   return (
     <div className="login-container">
       <h1>Login</h1>
-      <form method="post" action="/login/">
+      {error && <div className="alert alert-danger" role="alert">{error}</div>}
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="id_username">Username:</label>
-          <input type="text" name="username" id="id_username" required />
+          <input type="text" className="form-control" name="username" id="id_username" required onChange={handleChange} />
         </div>
         <div className="form-group">
           <label htmlFor="id_password">Password:</label>
-          <input type="password" name="password" id="id_password" required />
+          <input type="password" className="form-control" name="password" id="id_password" required onChange={handleChange} />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" className="btn btn-primary">Login</button>
       </form>
+      <div className="mt-3">
+        <p>Don't have an account? <Link to="/register">Register</Link></p>
+      </div>
     </div>
   );
 };

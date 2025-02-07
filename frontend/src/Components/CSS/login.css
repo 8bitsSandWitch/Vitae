@@ -1,3 +1,8 @@
+body {
+  background: #242424;
+  color: #fff;
+}
+
 .login-container {
   display: flex;
   flex-direction: column;
@@ -9,7 +14,11 @@
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   color: #fff;
-  width: 300px;
+  width: 30%;
+}
+
+form {
+  width: 100%;
 }
 
 .login-container h1 {
@@ -25,11 +34,28 @@
   margin-bottom: 5px;
 }
 
-.form-group input {
+.form-group input, .form-group select {
+  color: #fff;
+  background: #222;
   width: 100%;
   padding: 10px;
   border: none;
   border-radius: 5px;
+}
+
+.form-group input:focus, .form-group select:focus {
+  color: #fff;
+  background: #333;
+  outline: none;
+}
+
+.flex-container {
+  display: flex;
+  gap: 1rem; /* Adjust the gap between the items as needed */
+}
+
+.flex-item {
+  flex: 1; /* Ensure the items take equal space */
 }
 
 button[type="submit"] {

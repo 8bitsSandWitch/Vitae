@@ -11,6 +11,7 @@ import logging
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.contrib.auth import authenticate, login
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -50,10 +51,21 @@ def filter_cv(request):
 @api_view(['POST'])
 def register(request):
     try:
+        logger.info(f"Request data: {request.data}")  # Log the request data
         if request.method == 'POST':
             serializer = UtilisateurSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save()
+                user = serializer.save()
+                # Assign the user to the appropriate group based on type_utils
+                if user.type_utils == 'job_applicant':
+                    group_name = 'Job Applicants'
+                elif user.type_utils == 'job_poster':
+                    group_name = 'Job Posters'
+                else:
+                    group_name = 'Default Group'
+                
+                group, created = Group.objects.get_or_create(name=group_name)
+                user.groups.add(group)
                 response = JsonResponse({'message': 'User registered successfully'}, status=201)
                 response["Access-Control-Allow-Origin"] = "http://localhost:5173"
                 response["Access-Control-Allow-Credentials"] = "true"
@@ -65,6 +77,23 @@ def register(request):
                 return response
     except Exception as e:
         logger.error(f"Error in register: {str(e)}")
+        return JsonResponse({'error': 'An error occurred'}, status=500)
+
+@csrf_exempt
+@api_view(['POST'])
+def login_view(request):
+    try:
+        data = request.data
+        username = data.get('username')
+        password = data.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return JsonResponse({'message': 'Login successful'}, status=200)
+        else:
+            return JsonResponse({'error': 'Invalid credentials'}, status=400)
+    except Exception as e:
+        logger.error(f"Error in login_view: {str(e)}")
         return JsonResponse({'error': 'An error occurred'}, status=500)
 
 @api_view(['GET'])
@@ -95,4 +124,5 @@ urlpatterns = [
     path('register/', register, name='register'),
     path('users/', get_all_users, name='get_all_users'),
     path('users/<int:user_id>/', get_user, name='get_user'),
+    path('api/login/', login_view, name='login_view'),
 ]
