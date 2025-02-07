@@ -27,3 +27,45 @@ nav ul li a:hover {
     color: #ddd;
     /* Slightly lighter color on hover */
 }
+
+.custom-navbar {
+    padding-left: 10px;
+    position: fixed;
+    top: 15px;
+    width: fit-content;
+    z-index: 1000;
+    background: rgba(51, 51, 51, 0.8);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 1rem;
+}
+
+.custom-navbar .navbar-brand {
+    font-weight: bold;
+}
+
+.custom-navbar .nav-link {
+    color: #fff;
+    transition: color 0.3s;
+}
+
+.custom-navbar .nav-link:hover {
+    color: #ddd;
+    /* Slightly lighter color on hover */
+}
+
+.custom-navbar .dropdown-menu {
+    background: rgba(51, 51, 51, 0.9);
+    /* Semi-transparent background for dropdown */
+    backdrop-filter: blur(10px);
+    /* Apply blur effect to dropdown */
+}
+
+.custom-navbar .dropdown-item {
+    color: #fff;
+}
+
+.custom-navbar .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    /* Slightly lighter background on hover */
+}

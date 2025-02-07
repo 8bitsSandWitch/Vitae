@@ -37,7 +37,9 @@ const Login = () => {
       })
       .then(data => {
         console.log('Success:', data);
-        // Handle successful login, e.g., redirect to dashboard
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(data));
+        // Redirect to dashboard
         window.location.href = '/';
       })
       .catch(error => {
