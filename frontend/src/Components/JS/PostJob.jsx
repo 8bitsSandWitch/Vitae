@@ -5,6 +5,10 @@ const PostJob = () => {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [keywords, setKeywords] = useState("");
+  const [enterpriseName, setEnterpriseName] = useState("");
+  const [enterpriseEmail, setEnterpriseEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [dateExpire, setDateExpire] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -12,6 +16,10 @@ const PostJob = () => {
       title: jobTitle,
       description: jobDescription,
       keywords: keywords.split(",").map((keyword) => keyword.trim()),
+      enterprise_name: enterpriseName,
+      enterprise_email: enterpriseEmail,
+      location: location,
+      date_expire: dateExpire,
     };
 
     fetch("http://localhost:8000/api/post-job/", {
@@ -60,6 +68,46 @@ const PostJob = () => {
             id="keywords"
             value={keywords}
             onChange={(e) => setKeywords(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="enterpriseName">Enterprise Name</label>
+          <input
+            type="text"
+            id="enterpriseName"
+            value={enterpriseName}
+            onChange={(e) => setEnterpriseName(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="enterpriseEmail">Enterprise Email</label>
+          <input
+            type="email"
+            id="enterpriseEmail"
+            value={enterpriseEmail}
+            onChange={(e) => setEnterpriseEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="location">Location</label>
+          <input
+            type="text"
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="dateExpire">Expiration Date</label>
+          <input
+            type="date"
+            id="dateExpire"
+            value={dateExpire}
+            onChange={(e) => setDateExpire(e.target.value)}
             required
           />
         </div>

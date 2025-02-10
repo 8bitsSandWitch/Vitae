@@ -8,6 +8,8 @@ import "../CSS/nav.css";
 
 const Navbar = () => {
   const [activePage, setActivePage] = useState(window.location.pathname);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const navbarRef = useRef(null);
 
   useEffect(() => {
@@ -33,6 +35,16 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    // Handle login logic here
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    // Handle register logic here
+  };
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark custom-navbar" ref={navbarRef}>
@@ -154,9 +166,59 @@ const Navbar = () => {
                 </li>
               </ul>
             </li>
+            <li className="nav-item">
+              <button className="btn btn-primary" onClick={() => setShowLogin(true)}>Login</button>
+            </li>
+            <li className="nav-item">
+              <button className="btn btn-secondary" onClick={() => setShowRegister(true)}>Register</button>
+            </li>
           </ul>
         </div>
       </div>
+
+      {showLogin && (
+        <div className="popup">
+          <div className="popup-content">
+            <h2>Login</h2>
+            <form onSubmit={handleLogin}>
+              <div className="form-group">
+                <label htmlFor="loginUsername">Username</label>
+                <input type="text" id="loginUsername" className="form-control" required />
+              </div>
+              <div className="form-group">
+                <label htmlFor="loginPassword">Password</label>
+                <input type="password" id="loginPassword" className="form-control" required />
+              </div>
+              <button type="submit" className="btn btn-primary">Login</button>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowLogin(false)}>Close</button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showRegister && (
+        <div className="popup">
+          <div className="popup-content">
+            <h2>Register</h2>
+            <form onSubmit={handleRegister}>
+              <div className="form-group">
+                <label htmlFor="registerUsername">Username</label>
+                <input type="text" id="registerUsername" className="form-control" required />
+              </div>
+              <div className="form-group">
+                <label htmlFor="registerEmail">Email</label>
+                <input type="email" id="registerEmail" className="form-control" required />
+              </div>
+              <div className="form-group">
+                <label htmlFor="registerPassword">Password</label>
+                <input type="password" id="registerPassword" className="form-control" required />
+              </div>
+              <button type="submit" className="btn btn-primary">Register</button>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowRegister(false)}>Close</button>
+            </form>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };

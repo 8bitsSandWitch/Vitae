@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.utils import timezone
+from datetime import timedelta
 
 class Utilisateur(AbstractUser):
     TYPE_UTILS_CHOICES = [
@@ -47,6 +49,11 @@ class Job(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     keywords = models.JSONField()
+    enterprise_name = models.CharField(max_length=255, default="Unknown")
+    enterprise_email = models.EmailField(default='email@example.com')
+    location = models.CharField(max_length=255, default="Unknown")
+    date_posted = models.DateTimeField(default=timezone.now)
+    date_expire = models.DateTimeField(default=timezone.now() + timedelta(days=30))
 
     def __str__(self):
         return self.title

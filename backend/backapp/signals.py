@@ -16,17 +16,10 @@ def create_groups_and_permissions(sender, **kwargs):
         'Job Posters': ['add_job', 'view_job', 'filter_cv']
     }
 
-    # Create permissions if they do not exist
-    for perm in ['add_cv', 'view_cv', 'add_job', 'view_job', 'filter_cv']:
-        Permission.objects.get_or_create(
-            codename=perm,
-            name=f'Can {perm.replace("_", " ")}',
-            content_type=ContentType.objects.get_for_model(Utilisateur),
-        )
-
     # Assign permissions to groups
     for group_name, perms in permissions.items():
         group = Group.objects.get(name=group_name)
         for perm in perms:
-            permission = Permission.objects.get(codename=perm)
-            group.permissions.add(permission)
+            permission = Permission.objects.filter(codename=perm).first()
+            if permission:
+                group.permissions.add(permission)

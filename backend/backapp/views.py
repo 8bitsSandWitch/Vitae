@@ -156,7 +156,11 @@ def post_job(request):
         job = Job.objects.create(
             title=data['title'],
             description=data['description'],
-            keywords=data['keywords']
+            keywords=data['keywords'],
+            enterprise_name=data['enterprise_name'],
+            enterprise_email=data['enterprise_email'],
+            location=data['location'],
+            date_expire=data['date_expire']
         )
         return JsonResponse({'message': 'Job posted successfully'}, status=201)
     except Exception as e:
