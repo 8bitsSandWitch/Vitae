@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../CSS/login.css';
 import { Link } from 'react-router-dom';
+import logPicture from '../IMG/picA.jpg';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -65,21 +66,31 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <h1>Login</h1>
-      {error && <div className="alert alert-danger" role="alert">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="id_username">Username:</label>
-          <input type="text" className="form-control" name="username" id="id_username" required onChange={handleChange} />
+      <div className="welcome_img">
+        <img src={logPicture} alt="Welcome" />
+      </div>
+
+      <div className="login_formContainer">
+        {error && <div className="alert alert-danger" role="alert">{error}</div>}
+
+        <h1>Welcome To Vitaee</h1>
+        <p>Please login to continue</p>
+
+        <form className='login_form' onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="id_username">Username:</label>
+            <input type="text" className="form-control" name="username" id="id_username" required onChange={handleChange} />
+          </div>
+          <div className="form-group">
+            <label htmlFor="id_password">Password:</label>
+            <input type="password" className="form-control" name="password" id="id_password" required onChange={handleChange} />
+          </div>
+          <button type="submit" className="btn btn-primary">Login</button>
+        </form>
+
+        <div className="mt-3">
+          <p>Don't have an account? <Link to="/register">Register</Link></p>
         </div>
-        <div className="form-group">
-          <label htmlFor="id_password">Password:</label>
-          <input type="password" className="form-control" name="password" id="id_password" required onChange={handleChange} />
-        </div>
-        <button type="submit" className="btn btn-primary">Login</button>
-      </form>
-      <div className="mt-3">
-        <p>Don't have an account? <Link to="/register">Register</Link></p>
       </div>
     </div>
   );

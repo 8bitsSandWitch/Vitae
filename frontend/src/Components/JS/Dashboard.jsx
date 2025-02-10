@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../CSS/dashboard.css'
+import JobList from "./JobList";
+import FilterCV from "./FilterCV";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -13,7 +16,7 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="container mt-5">
+    <div className="dashboard_container main-content">
       <h1 className="mb-4">Dashboard</h1>
       {user ? (
         <div className="card">
@@ -23,6 +26,7 @@ const Dashboard = () => {
             <p className="card-text"><strong>First Name:</strong> {user.first_name}</p>
             <p className="card-text"><strong>Last Name:</strong> {user.last_name}</p>
             {/* Add more personalized content here */}
+            <JobList />
           </div>
         </div>
       ) : (

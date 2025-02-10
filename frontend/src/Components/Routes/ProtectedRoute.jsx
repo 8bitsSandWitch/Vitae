@@ -2,9 +2,10 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
-  const isAuthenticated = localStorage.getItem("username"); // Vérifie si un utilisateur est connecté
+  const userData = localStorage.getItem("user"); // Vérifie si un utilisateur est connecté
+  const isAuthenticated = userData ? true : false;
 
-  return isAuthenticated ? children : <Navigate to="/" replace />;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;

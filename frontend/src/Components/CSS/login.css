@@ -4,21 +4,48 @@ body {
 }
 
 .login-container {
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login_formContainer{
+  width: 30%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
+
+.welcome_img{
+  width: 70%;
+  height: 100dvh;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.welcome_img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login_form {
+  width: 100%;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 50px;
   padding: 20px;
   background: #333;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   color: #fff;
-  width: 30%;
-}
-
-form {
-  width: 100%;
 }
 
 .login-container h1 {
@@ -26,49 +53,10 @@ form {
 }
 
 .form-group {
-  margin-bottom: 15px;
+  width: 100%;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 5px;
-}
-
-.form-group input, .form-group select {
-  color: #fff;
-  background: #222;
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-}
-
-.form-group input:focus, .form-group select:focus {
-  color: #fff;
-  background: #333;
-  outline: none;
-}
-
-.flex-container {
-  display: flex;
-  gap: 1rem; /* Adjust the gap between the items as needed */
-}
-
-.flex-item {
-  flex: 1; /* Ensure the items take equal space */
-}
-
-button[type="submit"] {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-button[type="submit"]:hover {
-  background: #0056b3;
 }

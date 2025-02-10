@@ -74,7 +74,7 @@ const Register = () => {
     <div className="register-container">
       <h1>Register</h1>
       {error && <div className="alert alert-danger" role="alert">{error}</div>}
-      <form onSubmit={handleSubmit}>
+      <form className='register_form' onSubmit={handleSubmit}>
         <div className="form-group flex-container">
           <div className="flex-item">
             <label htmlFor="id_first_name">First Name:</label>

@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import Utilisateur
+from .models import Utilisateur, Job, CV
 
 class UtilisateurSerializer(serializers.ModelSerializer):
     class Meta:
         model = Utilisateur
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'type_utils']
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -18,3 +18,13 @@ class UtilisateurSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+class JobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Job
+        fields = '__all__'
+
+class CVSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CV
+        fields = '__all__'
