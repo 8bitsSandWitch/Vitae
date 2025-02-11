@@ -21,6 +21,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.job_minimise{
+  width: 299px; 
+  max-height: 55px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: wrap; 
+  word-break: break-word;
+}
 
 .job-card button {
   padding: 10px 20px;

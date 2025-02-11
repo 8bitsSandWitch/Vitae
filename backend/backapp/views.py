@@ -61,6 +61,8 @@ def register(request):
             serializer = UtilisateurSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.save()
+                user.set_password(request.data['password'])
+                user.save()
                 # Assign the user to the appropriate group based on type_utils
                 if user.type_utils == 'job_applicant':
                     group_name = 'Job Applicants'
@@ -82,7 +84,7 @@ def register(request):
                 return response
     except Exception as e:
         logger.error(f"Error in register: {str(e)}")
-        return JsonResponse({'error': 'An error occurred durin registration'}, status=500)
+        return JsonResponse({'error': 'An error occurred during registration'}, status=500)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -114,15 +116,31 @@ def login_view(request):
 @api_view(['POST'])
 def upload_cv(request):
     try:
-        print("OKay")
         parser_classes = (MultiPartParser,)
         file = request.FILES['cv']
         file_name = default_storage.save(file.name, ContentFile(file.read()))
         file_url = default_storage.url(file_name)
+        cv = CV.objects.create(
+            name=file.name,
+            email=request.user.email,
+            keywords=[],  # Add logic to extract keywords if needed
+            cv_url=file_url
+        )
         return JsonResponse({'message': 'File uploaded successfully', 'file_url': file_url}, status=201)
     except Exception as e:
         logger.error(f"Error in upload_cv: {str(e)}")
         return JsonResponse({'error': 'An error occurred during file upload'}, status=500)
+
+@login_required
+@api_view(['GET'])
+def get_uploaded_cvs(request):
+    try:
+        cvs = CV.objects.filter(email=request.user.email)
+        serializer = CVSerializer(cvs, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error in get_uploaded_cvs: {str(e)}")
+        return JsonResponse({'error': 'An error occurred while fetching uploaded CVs'}, status=500)
 
 @api_view(['GET'])
 def get_all_users(request):
@@ -184,6 +202,7 @@ urlpatterns = [
     path('users/<int:user_id>/', get_user, name='get_user'),
     path('api/login/', login_view, name='login_view'),
     path('api/upload/', upload_cv, name='upload_cv'),
+    path('api/uploaded-cvs/', get_uploaded_cvs, name='get_uploaded_cvs'),
     path('api/post-job/', post_job, name='post_job'),
     path('api/jobs/', list_jobs, name='list_jobs'),
     path('api/filter-cv/', filter_cv, name='filter_cv'),

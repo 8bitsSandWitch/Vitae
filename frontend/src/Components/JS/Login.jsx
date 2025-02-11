@@ -1,67 +1,56 @@
-import React, { useState } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '../CSS/login.css';
-import { Link } from 'react-router-dom';
-import logPicture from '../IMG/picA.jpg';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import Cookies from 'js-cookie';
+import "../CSS/login.css";
+import { Link } from "react-router-dom";
 
-const Login = () => {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
+import logPicture from '../IMG/LoginPic.png'
 
-  const [error, setError] = useState('');
+const Alert = React.forwardRef(function Alert(props, ref) {
+  return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+const Login = ({ onSubmit }) => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch('http://localhost:8000/login/', {
-      method: 'POST',
+    const csrfToken = Cookies.get('csrftoken');
+    fetch("http://localhost:8000/api/login/", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
       },
-      body: JSON.stringify(formData),
-      credentials: 'include' // Include credentials in the request
+      body: JSON.stringify({ username, password }),
+      credentials: 'include',
     })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          setSnackbar({ open: true, message: data.error, severity: 'error' });
+        } else {
+          localStorage.setItem('user', JSON.stringify(data));
+          setSnackbar({ open: true, message: 'Login successful', severity: 'success' });
+          if (onSubmit) {
+            onSubmit();
+          }
+          navigate('/');
         }
-        return response.json();
       })
-      .then(data => {
-        console.log('Success:', data);
-        // Store user data in localStorage
-        localStorage.setItem('user', JSON.stringify(data));
-        // Redirect to dashboard
-        window.location.href = '/';
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        setError('Invalid credentials');
+      .catch((error) => {
+        console.error("Error:", error);
+        setSnackbar({ open: true, message: 'An error occurred during login.', severity: 'error' });
       });
   };
 
-  const getCookie = (name) => {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
@@ -70,28 +59,45 @@ const Login = () => {
         <img src={logPicture} alt="Welcome" />
       </div>
 
-      <div className="login_formContainer">
-        {error && <div className="alert alert-danger" role="alert">{error}</div>}
-
-        <h1>Welcome To Vitaee</h1>
+      <form className="login_form" onSubmit={handleSubmit}>
+        <h3>Welcome To Vitaee</h3>
         <p>Please login to continue</p>
 
-        <form className='login_form' onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="id_username">Username:</label>
-            <input type="text" className="form-control" name="username" id="id_username" required onChange={handleChange} />
-          </div>
-          <div className="form-group">
-            <label htmlFor="id_password">Password:</label>
-            <input type="password" className="form-control" name="password" id="id_password" required onChange={handleChange} />
-          </div>
-          <button type="submit" className="btn btn-primary">Login</button>
-        </form>
+        <div className="form-group">
+          <label htmlFor="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
 
-        <div className="mt-3">
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit">Login</button>
+
+        <div className="mt-4">
           <p>Don't have an account? <Link to="/register">Register</Link></p>
         </div>
-      </div>
+      </form>
+
+
+      <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

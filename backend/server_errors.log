@@ -1,14 +1,6 @@
-Internal Server Error: /api/upload/
-"POST /api/upload/ HTTP/1.1" 500 49
-Internal Server Error: /api/jobs/
-"GET /api/jobs/ HTTP/1.1" 500 50
-Internal Server Error: /api/jobs/
-"GET /api/jobs/ HTTP/1.1" 500 50
-Internal Server Error: /api/jobs/
-"GET /api/jobs/ HTTP/1.1" 500 50
-Internal Server Error: /api/jobs/
-"GET /api/jobs/ HTTP/1.1" 500 50
-Internal Server Error: /api/jobs/
-"GET /api/jobs/ HTTP/1.1" 500 50
-Internal Server Error: /api/jobs/
-"GET /api/jobs/ HTTP/1.1" 500 50
+Internal Server Error: /register/
+"POST /register/ HTTP/1.1" 500 50
+Internal Server Error: /register/
+"POST /register/ HTTP/1.1" 500 50
+Internal Server Error: /register/
+"POST /register/ HTTP/1.1" 500 50
