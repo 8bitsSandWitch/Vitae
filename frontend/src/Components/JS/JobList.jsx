@@ -1,40 +1,53 @@
 import React, { useEffect, useState } from "react";
-import "../CSS/jobList.css";
-import PostImg from '../IMG/picD.jpg';
+import JobCard from "./JobCard";
 
 const JobList = ({ onApply }) => {
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/jobs/")
-      .then((response) => response.json())
-      .then((data) => {
-        setJobs(data);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+    const fetchJobs = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/job-offers/", {
+          credentials: "include", // Include credentials in the request
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setJobs(data);
+        } else {
+          console.error("Failed to fetch jobs:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
+  if (loading) {
+    return <p>Loading jobs...</p>;
+  }
+
   return (
-    <>
+    <div className="job-list">
       {jobs.length > 0 ? (
         jobs.map((job) => (
-          <div key={job.id} className="job-card">
-            <h3>{job.title}</h3>
-            <strong>{job.enterprise_name}</strong>
-            <img src={PostImg} alt="Post Image" width="100%" />
-            <p className="job_minimise">{job.description}</p>
-            <p><strong>Location:</strong> {job.location}</p>
-            <p><strong>Keywords:</strong> {job.keywords.join(", ")}</p>
-            <p><strong>Closed By:</strong> {new Date(job.date_expire).toLocaleDateString('fr-GB')}</p>
-            <button onClick={() => onApply(job.id)}>Apply</button>
-          </div>
+          <JobCard
+            key={job.id}
+            job={{
+              ...job,
+              keywords: Array.isArray(job.keywords) ? job.keywords : job.keywords.split(","),
+            }}
+            showActions={false} // Do not show delete and edit actions on the dashboard
+          />
         ))
       ) : (
         <p>No job offers available.</p>
       )}
-    </>
+    </div>
   );
 };
 

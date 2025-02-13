@@ -45,6 +45,16 @@ def create_groups_and_permissions():
             if permission:
                 group.permissions.add(permission)
 
+class Entreprise(models.Model):
+    user = models.ForeignKey(Utilisateur, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    address = models.CharField(max_length=255)
+    email = models.EmailField()
+    website = models.URLField()
+
+    def __str__(self):
+        return self.name
+
 class Job(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -54,6 +64,7 @@ class Job(models.Model):
     location = models.CharField(max_length=255, default="Unknown")
     date_posted = models.DateTimeField(default=timezone.now)
     date_expire = models.DateTimeField(default=timezone.now() + timedelta(days=30))
+    user = models.ForeignKey(Utilisateur, on_delete=models.CASCADE)  # Foreign key to Utilisateur
 
     def __str__(self):
         return self.title
@@ -61,8 +72,32 @@ class Job(models.Model):
 class CV(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
+    description = models.TextField(default='Nothing to say')
     keywords = models.JSONField()
     cv_url = models.URLField()
+    extracted_text = models.TextField(null=True, blank=True)  # New field to store extracted text
 
     def __str__(self):
         return self.name
+
+class Education(models.Model):
+    cv = models.ForeignKey(CV, related_name='educations', on_delete=models.CASCADE)
+    institution_name = models.CharField(max_length=255)
+    degree = models.CharField(max_length=255)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.degree} at {self.institution_name}"
+
+class Experience(models.Model):
+    cv = models.ForeignKey(CV, related_name='experiences', on_delete=models.CASCADE)
+    company_name = models.CharField(max_length=255)
+    job_title = models.CharField(max_length=255)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"{self.job_title} at {self.company_name}"

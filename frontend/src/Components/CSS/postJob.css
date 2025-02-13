@@ -22,15 +22,15 @@
   color: white;
 }
 
-.form-group input,
-.form-group textarea {
+.post-job-container .form-group input,
+.post-job-container .form-group textarea {
   width: 100%;
   padding: 10px;
   border-radius: 5px;
   box-sizing: border-box;
 }
 
-.form-group textarea {
+.post-job-container .form-group textarea {
   resize: vertical;
 }
 

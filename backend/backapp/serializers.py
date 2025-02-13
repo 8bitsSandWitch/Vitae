@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Utilisateur, Job, CV
+from .models import Utilisateur, Job, CV, Entreprise
 
 class UtilisateurSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -26,4 +26,9 @@ class JobSerializer(serializers.ModelSerializer):
 class CVSerializer(serializers.ModelSerializer):
     class Meta:
         model = CV
+        fields = '__all__'
+
+class EntrepriseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Entreprise
         fields = '__all__'

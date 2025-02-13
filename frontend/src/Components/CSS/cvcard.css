@@ -1,0 +1,54 @@
+.cv-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+  padding: 20px;
+  width: 300px;
+  transition: transform 0.3s;
+  position: relative;
+}
+
+.cv-card:hover {
+  transform: translateY(-5px);
+}
+
+.cv-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cv-card-body {
+  margin-bottom: 20px;
+}
+
+.cv-card-footer {
+  text-align: right;
+}
+
+.cv-card-footer .btn {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cv-card-footer .btn:hover {
+  background-color: #0056b3;
+}
+
+.delete-icon {
+  cursor: pointer;
+  color: #dc3545;
+  transition: color 0.3s;
+}
+
+.delete-icon:hover {
+  color: #c82333;
+}

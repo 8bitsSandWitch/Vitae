@@ -7,6 +7,7 @@ import "../CSS/upload.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudUploadAlt } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import CVCard from "./CVCard";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -14,6 +15,9 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 
 const UploadCV = () => {
   const [files, setFiles] = useState([]);
+  const [cvName, setCvName] = useState("");
+  const [description, setDescription] = useState("");
+  const [keywords, setKeywords] = useState("");
   const [uploadedCVs, setUploadedCVs] = useState([]);
   const [uploadProgress, setUploadProgress] = useState({});
   const [snackbar, setSnackbar] = useState({
@@ -23,14 +27,16 @@ const UploadCV = () => {
   });
   const [openModal, setOpenModal] = useState(false);
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     // Check if the user is authenticated
-    const user = localStorage.getItem("user");
-    if (!user) {
+    const userData = localStorage.getItem("user");
+    if (!userData) {
       navigate("/login");
       return;
     }
+    setUser(JSON.parse(userData));
 
     // Fetch uploaded CVs
     fetch("http://localhost:8000/api/uploaded-cvs/", {
@@ -60,6 +66,14 @@ const UploadCV = () => {
     setFiles([...e.target.files]);
   };
 
+  const getCSRFToken = () => {
+    const cookieValue = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("csrftoken="))
+      ?.split("=")[1];
+    return cookieValue;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (files.length === 0) {
@@ -72,60 +86,94 @@ const UploadCV = () => {
     }
 
     const formData = new FormData();
-    files.forEach((file, index) => {
-      formData.append(`cv_${index}`, file);
-    });
+    formData.append("cv", files[0]);
+    formData.append("name", cvName);
+    formData.append("email", user.email);
+    formData.append("description", description);
+    formData.append("keywords", keywords);
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:8000/api/upload/", true);
+    const csrfToken = getCSRFToken();
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const percentComplete = Math.round((event.loaded / event.total) * 100);
-        setUploadProgress({
-          ...uploadProgress,
-          [event.target.id]: percentComplete,
-        });
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        setSnackbar({
-          open: true,
-          message: "File uploaded successfully.",
-          severity: "success",
-        });
-        setOpenModal(false);
-        // Fetch updated list of uploaded CVs
-        fetch("http://localhost:8000/api/uploaded-cvs/", {
-          credentials: "include",
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            setUploadedCVs(data);
-          })
-          .catch((error) => {
-            console.error("Error fetching uploaded CVs:", error);
+    fetch("http://localhost:8000/api/upload/", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "File uploaded successfully") {
+          setSnackbar({
+            open: true,
+            message: "File uploaded successfully.",
+            severity: "success",
           });
-      } else {
+          setOpenModal(false);
+          // Update the uploaded CVs list
+          setUploadedCVs((prevCVs) => [
+            ...prevCVs,
+            {
+              id: data.id, // Use the ID from the backend response
+              name: cvName,
+              email: user.email,
+              description: description,
+              keywords: keywords.split(","),
+              cv_url: data.file_url,
+            },
+          ]);
+        } else {
+          setSnackbar({
+            open: true,
+            message: "An error occurred during file upload.",
+            severity: "error",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error uploading file:", error);
         setSnackbar({
           open: true,
           message: "An error occurred during file upload.",
           severity: "error",
         });
-      }
-    };
-
-    xhr.onerror = () => {
-      setSnackbar({
-        open: true,
-        message: "An error occurred during file upload.",
-        severity: "error",
       });
-    };
+  };
 
-    xhr.send(formData);
+  const handleDelete = (cvId) => {
+    const csrfToken = getCSRFToken();
+    fetch(`http://localhost:8000/api/delete-cv/${cvId}/`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          setUploadedCVs((prevCVs) => prevCVs.filter((cv) => cv.id !== cvId));
+          setSnackbar({
+            open: true,
+            message: "CV deleted successfully.",
+            severity: "success",
+          });
+        } else {
+          setSnackbar({
+            open: true,
+            message: "An error occurred during CV deletion.",
+            severity: "error",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error deleting CV:", error);
+        setSnackbar({
+          open: true,
+          message: "An error occurred during CV deletion.",
+          severity: "error",
+        });
+      });
   };
 
   const handleCloseSnackbar = () => {
@@ -145,17 +193,15 @@ const UploadCV = () => {
       <div className="up-container main-content">
         <div className="up-header">
           <h3>Your Uploaded CVs</h3>
-          <button className="btn btn-primary" onClick={handleOpenModal}>Add CV</button>
+          <button className="btn btn-primary" onClick={handleOpenModal}>
+            Add CV
+          </button>
         </div>
 
         <div className="uploaded-cvs">
           {uploadedCVs.length > 0 ? (
             uploadedCVs.map((cv, index) => (
-              <div key={index} className="cv-item">
-                <a href={cv.cv_url} target="_blank" rel="noopener noreferrer">
-                  {cv.name}
-                </a>
-              </div>
+              <CVCard key={index} cv={cv} onDelete={handleDelete} />
             ))
           ) : (
             <p>No CVs uploaded yet.</p>
@@ -169,9 +215,12 @@ const UploadCV = () => {
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
       >
-        <div className="up-dropzone-container main-content">
-          <div className="up-header">
+        <div className="up-popup_container">
+          <div className="up-dropHeader">
             <h2>Upload your CV</h2>
+            <button className="btn btn-danger" onClick={handleCloseModal}>
+              Close
+            </button>
           </div>
 
           <div className="file_n_drop">
@@ -180,21 +229,53 @@ const UploadCV = () => {
               <p>or</p>
               <p>Click to browse</p>
               <form className="up_form" onSubmit={handleSubmit}>
-                <div className="up-dropzone">
-                  <FontAwesomeIcon icon={faCloudUploadAlt} size="3x" />
-                  <input
-                    type="file"
-                    onChange={handleFileChange}
-                    accept="application/pdf"
-                    multiple
-                  />
+                <div className="">
+                  <div className="up-dropzone">
+                    <FontAwesomeIcon icon={faCloudUploadAlt} size="3x" />
+                    <input
+                      type="file"
+                      onChange={handleFileChange}
+                      accept="application/pdf"
+                      multiple
+                    />
+                  </div>
+                  <button type="submit">Upload CV</button>
                 </div>
-                <button type="submit">Upload CV</button>
+                <div className="hidden">
+                  <div className="form-group">
+                    <label htmlFor="cvName">CV Name</label>
+                    <input
+                      type="text"
+                      id="cvName"
+                      value={cvName}
+                      onChange={(e) => setCvName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="description">Description</label>
+                    <textarea
+                      id="description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      required
+                    ></textarea>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="keywords">Keywords (comma separated)</label>
+                    <textarea
+                      id="keywords"
+                      value={keywords}
+                      onChange={(e) => setKeywords(e.target.value)}
+                      required
+                    ></textarea>
+                  </div>
+                </div>
               </form>
             </div>
 
             <div className="up-fileContainer">
-              <h5>Uploaded Files</h5>
+              <h5>File List</h5>
               <div className="file_template">
                 {files.map((file, index) => (
                   <div key={index} className="file-item">

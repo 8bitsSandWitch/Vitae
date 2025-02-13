@@ -11,7 +11,7 @@ import Login from "../JS/Login";
 import Register from "../JS/Register";
 import Navbar from "../JS/Navbar";
 import Dashboard from "../JS/Dashboard";
-import PostJob from "../JS/PostJob";
+import PostJob from "../JS/PostOffer";
 import UploadCV from "../JS/UploadCV";
 import KeywordFilter from "../JS/KeywordFilter";
 import JobList from "../JS/JobList";

@@ -1,15 +1,18 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import *
+
+router = DefaultRouter()
+router.register(r'utilisateurs', UtilisateurViewSet, basename='utilisateur')
+router.register(r'jobs', JobViewSet, basename='job')
+router.register(r'cvs', CVViewSet, basename='cv')
+router.register(r'entreprises', EntrepriseViewSet, basename='entreprise')
 
 urlpatterns = [
-    path('login/', views.login_view, name='login_view'),
-    path('register/', views.register, name='register'),
-    path('users/', views.get_all_users, name='get_all_users'),
-    path('users/<int:user_id>/', views.get_user, name='get_user'),
-    path('api/login/', views.login_view, name='login_view'),
-    path('api/upload/', views.upload_cv, name='upload_cv'),
-    path('api/uploaded-cvs/', views.get_uploaded_cvs, name='get_uploaded_cvs'),
-    path('api/post-job/', views.post_job, name='post_job'),
-    path('api/jobs/', views.list_jobs, name='list_jobs'),
-    path('api/filter-cv/', views.filter_cv, name='filter_cv'),
+    path('register/', register, name='register'),
+    path('login/', login_view, name='login_view'),
+    path('job-offers/', list_jobs, name='list_jobs'),
+    path('user-jobs/', get_user_jobs, name='get_user_jobs'),
+    path('uploaded-cvs/', get_uploaded_cvs, name='get_uploaded_cvs'),
+    path('', include(router.urls)),
 ]
