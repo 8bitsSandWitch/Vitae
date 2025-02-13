@@ -118,7 +118,7 @@
     opacity: 0;
 }
 
-button[type="submit"] {
+.up_form button[type="submit"] {
     margin-top: 20px;
 }
 

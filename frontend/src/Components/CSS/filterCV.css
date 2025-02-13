@@ -29,7 +29,7 @@
   box-sizing: border-box;
 }
 
-button[type="submit"] {
+.filter-form button[type="submit"] {
   display: block;
   width: 100%;
   padding: 10px;
@@ -41,7 +41,7 @@ button[type="submit"] {
   transition: background 0.3s;
 }
 
-button[type="submit"]:hover {
+.filter-form button[type="submit"]:hover {
   background: #0056b3;
 }
 

@@ -44,6 +44,22 @@ body {
   color: #fff;
 }
 
+.login_form button[type="submit"] {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login_form button[type="submit"]:hover {
+  background: #0056b3;
+}
+
 
 .login-container h3 {
   text-align: center;

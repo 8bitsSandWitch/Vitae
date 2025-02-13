@@ -5,9 +5,6 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 
-import Login from './Login';
-import Register from './Register';
-
 import "../CSS/nav.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"; // Import Bootstrap JS
@@ -18,11 +15,11 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 
 const Navbar = () => {
   const [activePage, setActivePage] = useState(window.location.pathname);
-  const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
   const [activeBackgroundStyle, setActiveBackgroundStyle] = useState({});
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const navbarRef = useRef(null);
+  const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const handleLocationChange = () => {
@@ -39,14 +36,22 @@ const Navbar = () => {
       }
     };
 
+    const handleScroll = () => {
+      const currentScrollPos = window.pageYOffset;
+      setVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
     window.addEventListener("popstate", handleLocationChange);
     document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll);
 
     return () => {
       window.removeEventListener("popstate", handleLocationChange);
       document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, []);
+  }, [prevScrollPos]);
 
   useEffect(() => {
     const activeNavItem = document.querySelector(`.nav-item.active`);
@@ -59,23 +64,13 @@ const Navbar = () => {
     }
   }, [activePage]);
 
-  const handleLogin = () => {
-    setSnackbar({ open: true, message: 'Login successful', severity: 'success' });
-    setShowLogin(false);
-  };
-
-  const handleRegister = () => {
-    setSnackbar({ open: true, message: 'Registration successful', severity: 'success' });
-    setShowRegister(false);
-  };
-
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
   return (
     <>
-      <nav className="navbar navbar-expand-lg navbar-dark custom-navbar" ref={navbarRef}>
+      <nav className={`navbar navbar-expand-lg navbar-dark custom-navbar ${visible ? 'visible' : 'hidden'}`} ref={navbarRef}>
         <div className="container-fluid nav_div">
           <Link className="navbar-brand" to="/">
             Vitae
@@ -126,18 +121,6 @@ const Navbar = () => {
                   Upload CV
                 </Link>
               </li>
-              <li
-                className={`nav-item ${activePage === "/set-keywords" ? "active" : ""
-                  }`}
-              >
-                <Link
-                  className="nav-link"
-                  to="/set-keywords"
-                  onClick={() => setActivePage("/set-keywords")}
-                >
-                  Set Keywords
-                </Link>
-              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -156,8 +139,8 @@ const Navbar = () => {
                   <li>
                     <Link
                       className="dropdown-item"
-                      to="/manage-account"
-                      onClick={() => setActivePage("/manage-account")}
+                      to="/account"
+                      onClick={() => setActivePage("/account")}
                     >
                       Manage Account
                     </Link>
@@ -191,31 +174,11 @@ const Navbar = () => {
                   </li>
                 </ul>
               </li>
-              <li className="nav-item">
-                <button className="btn btn-primary" onClick={() => setShowLogin(true)}>Login</button>
-              </li>
-              <li className="nav-item">
-                <button className="btn btn-secondary" onClick={() => setShowRegister(true)}>Register</button>
-              </li>
             </ul>
-            <div className="active-background" style={activeBackgroundStyle}></div>
+            {/* <div className="active-background" style={activeBackgroundStyle}></div> */}
           </div>
         </div>
       </nav>
-
-      {showLogin && (
-        <div className="popup" onClick={() => setShowLogin(false)}>
-          <Login onSubmit={handleLogin} />
-        </div>
-      )}
-
-      {showRegister && (
-        <div className="popup" onClick={() => setShowRegister(false)}>
-          <div className="popup-content">
-            <Register onSubmit={handleRegister} />
-          </div>
-        </div>
-      )}
 
       <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={handleCloseSnackbar}>
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>

@@ -41,7 +41,7 @@ const PostJob = () => {
   return (
     <div className="post-job-container main-content">
       <h2>Post a Job</h2>
-      <form onSubmit={handleSubmit}>
+      <form className="postjob-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="jobTitle">Job Title</label>
           <input

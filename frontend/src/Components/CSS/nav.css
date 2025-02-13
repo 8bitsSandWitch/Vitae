@@ -2,6 +2,7 @@ nav {
     background-color: #333;
     padding: 10px 20px;
     margin: 0px 0 50px 0;
+    transition: top 0.3s;
 }
 
 nav ul {
@@ -28,7 +29,7 @@ nav ul li a:hover {
 
 .custom-navbar {
     width: fit-content;
-    min-width: 90%;
+    /* min-width: 90%; */
     display: flex;
 
     position: fixed;
@@ -38,6 +39,10 @@ nav ul li a:hover {
     backdrop-filter: blur(10px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 1rem;
+}
+
+.custom-navbar.hidden {
+    top: -100px; /* Adjust this value to hide the navbar */
 }
 
 .nav_div{

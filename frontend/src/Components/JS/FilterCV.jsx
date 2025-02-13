@@ -20,7 +20,7 @@ const FilterCV = () => {
   return (
     <div className="filter-cv-container main-content">
       <h2>Filter CVs</h2>
-      <form onSubmit={handleSubmit}>
+      <form className="filter-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="keywords">Keywords (comma separated)</label>
           <input
