@@ -1,36 +1,27 @@
 import React, { useState, useEffect } from "react";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
-import "../CSS/profile.css";
 import { useNavigate } from "react-router-dom";
+import "../CSS/profile.css";
 import axios from "axios";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUserAlt } from "@fortawesome/free-solid-svg-icons";
-import { faUserAltSlash } from "@fortawesome/free-solid-svg-icons";
-import { faUserAstronaut } from "@fortawesome/free-solid-svg-icons";
-import { faUserGear } from "@fortawesome/free-solid-svg-icons";
-import { faUserEdit } from "@fortawesome/free-solid-svg-icons";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { faUserCircle } from "@fortawesome/free-solid-svg-icons";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
-import { faLock } from "@fortawesome/free-solid-svg-icons";
-import Default from '../IMG/default.png'
+import { faCheck, faEdit, faLock, faUserAltSlash } from "@fortawesome/free-solid-svg-icons";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
 });
 
-const profile = () => {
+const Profile = () => {
   const [user, setUser] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
-  const [Email, setEmail] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [newpassword, setNewpassword] = useState("");
-  const [confirmpassword, setConfirmpassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState(null);
   const [enterpriseName, setEnterpriseName] = useState("");
   const [enterpriseAddress, setEnterpriseAddress] = useState("");
   const [enterpriseEmail, setEnterpriseEmail] = useState("");
@@ -51,10 +42,13 @@ const profile = () => {
     }
     const parsedUser = JSON.parse(userData);
     setUser(parsedUser);
-    setFirstName(parsedUser.first_name);
-    setLastName(parsedUser.last_name);
-    setUsername(parsedUser.username);
-    setEmail(parsedUser.email);
+    setFirstName(parsedUser.first_name || "");
+    setLastName(parsedUser.last_name || "");
+    setUsername(parsedUser.username || "");
+    setEmail(parsedUser.email || "");
+    if (parsedUser.profile_picture) {
+      setProfilePicturePreview(parsedUser.profile_picture);
+    }
   }, [navigate]);
 
   const getCSRFToken = () => {
@@ -66,20 +60,81 @@ const profile = () => {
   };
 
   const handleProfilePictureChange = (e) => {
-    setProfilePicture(e.target.files[0]);
+    const file = e.target.files[0];
+    setProfilePicture(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePicturePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setProfilePicturePreview(null);
+    }
+  };
+
+  const handleCancelProfilePicture = () => {
+    setProfilePicture(null);
+    setProfilePicturePreview(user.profile_picture);
+  };
+
+  const handleValidaterofilePicture = () => {
+    if (!profilePicture) {
+      setSnackbar({
+        open: true,
+        message: "No profile picture selected.",
+        severity: "error",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("profile_picture", profilePicture);
+
+    const csrfToken = getCSRFToken();
+    const token = localStorage.getItem("token");
+
+    axios.put(`http://localhost:8000/api/update-profile-picture/`, formData, {
+      headers: {
+        "X-CSRFToken": csrfToken,
+        "Authorization": `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        setSnackbar({
+          open: true,
+          message: "Profile picture updated successfully.",
+          severity: "success",
+        });
+        // Update local storage with new user data
+        const updatedUser = { ...user, profile_picture: response.data.profile_picture };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      })
+      .catch((error) => {
+        console.error("Error updating profile picture:", error);
+        setSnackbar({
+          open: true,
+          message: "An error occurred during profile picture update.",
+          severity: "error",
+        });
+      });
   };
 
   const passwordSubmit = async (e) => {
     e.preventDefault();
-    if (newpassword === confirmpassword) {
+    if (newPassword === confirmPassword) {
       const formData = new FormData();
-      formData.append("password", newpassword);
+      formData.append("password", newPassword);
 
       const csrfToken = getCSRFToken();
+      const token = localStorage.getItem("token");
 
       axios.put(`http://localhost:8000/api/users/${user.id}/`, formData, {
+        credentials: "include",
         headers: {
           "X-CSRFToken": csrfToken,
+          "Authorization": `Bearer ${token}`,
         },
       })
         .then((response) => {
@@ -104,12 +159,7 @@ const profile = () => {
         severity: "error",
       });
     }
-
-
-    if (profilePicture) {
-      formData.append("profile_picture", profilePicture);
-    }
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -120,12 +170,14 @@ const profile = () => {
     formData.append("username", username);
 
     const csrfToken = getCSRFToken();
+    const token = localStorage.getItem("token");
 
     fetch(`http://localhost:8000/api/users/${user.id}/`, {
       method: "PUT",
       credentials: "include",
       headers: {
         "X-CSRFToken": csrfToken,
+        "Authorization": `Bearer ${token}`,
       },
       body: formData,
     })
@@ -168,6 +220,7 @@ const profile = () => {
     };
 
     const csrfToken = getCSRFToken();
+    const token = localStorage.getItem("token");
 
     fetch("http://localhost:8000/api/entreprise/", {
       method: "POST",
@@ -175,6 +228,7 @@ const profile = () => {
       headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": csrfToken,
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(formData),
     })
@@ -213,11 +267,23 @@ const profile = () => {
       <div className="profile-sb">
         <div className="profile-sb-header">
           <div className="profile-edit-img">
-            <img src={Default} alt="" />
-            <FontAwesomeIcon icon={faEdit} className="profile-edit-icon" />
-            <input type="file" className="edit-img-input" id="profilePicture" onChange={handleProfilePictureChange} accept="image/*" />
+            <img src={profilePicturePreview || null} alt="Profile" />
+            <form className="profile-image-form">
+              {!profilePicture && (
+                <FontAwesomeIcon icon={faEdit} className="profile-edit-icon" />
+              )}
+              <input type="file" className="edit-img-input" id="profilePicture" onChange={handleProfilePictureChange} accept="image/*" />
+              {profilePicture && (
+                <FontAwesomeIcon icon={faCheck} className="validate-btn" onClick={handleValidaterofilePicture} />
+              )}
+            </form>
           </div>
           <p>@{username}</p>
+          {
+            profilePicture && (
+              <button type="button" className="cancel-btn" onClick={handleCancelProfilePicture}>Cancel</button>
+            )
+          }
         </div>
 
         <hr className="divide-line" />
@@ -234,7 +300,7 @@ const profile = () => {
         <form className="profile-form" onSubmit={handleSubmit}>
           <div className="profile-form-header">
             <div className="title-icon-group">
-              <FontAwesomeIcon icon={faUserEdit} className="profile-user-icon" />
+              <FontAwesomeIcon icon={faEdit} className="profile-user-icon" />
               <h2>Account Settings</h2>
             </div>
             <button type="submit">Save</button>
@@ -273,11 +339,11 @@ const profile = () => {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="username">Email</label>
+              <label htmlFor="email">Email</label>
               <input
                 type="email"
                 id="email"
-                value={Email}
+                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
@@ -296,15 +362,15 @@ const profile = () => {
 
           <div className="form-group">
             <label htmlFor="password">Current Password</label>
-            <input type="password" id="password" onChange={(e) => setPassword(e.target.value)} />
+            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div className="form-group">
-            <label htmlFor="password">New Password</label>
-            <input type="password" id="newpassword" onChange={(e) => setNewpassword(e.target.value)} />
+            <label htmlFor="newPassword">New Password</label>
+            <input type="password" id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           </div>
           <div className="form-group">
-            <label htmlFor="password">Confirm Password</label>
-            <input type="password" id="confirmpassword" onChange={(e) => setConfirmpassword(e.target.value)} />
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
         </form>
 
@@ -373,4 +439,4 @@ const profile = () => {
   );
 };
 
-export default profile;
+export default Profile;

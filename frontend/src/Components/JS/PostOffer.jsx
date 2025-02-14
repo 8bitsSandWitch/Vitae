@@ -23,16 +23,20 @@ const PostOffer = () => {
   const [location, setLocation] = useState("");
   const [dateExpire, setDateExpire] = useState("");
   const [postedJobs, setPostedJobs] = useState([]);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
+  const [snackbar, setSnackbar] = useState({open: false, message: "", severity: "success",});
   const [openModal, setOpenModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+
+  const getCSRFToken = () => {
+    const cookieValue = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("csrftoken="))
+      ?.split("=")[1];
+    return cookieValue;
+  };
 
   useEffect(() => {
     // Check if the user is authenticated
@@ -43,9 +47,16 @@ const PostOffer = () => {
     }
     setUser(JSON.parse(userData));
 
+    const csrfToken = getCSRFToken();
+
     // Fetch posted jobs by the current user
     fetch("http://localhost:8000/api/user-jobs/", {
+      method: "GET",
       credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
     })
       .then((response) => {
         if (response.status === 403) {
@@ -67,14 +78,6 @@ const PostOffer = () => {
       });
   }, [navigate]);
 
-  const getCSRFToken = () => {
-    const cookieValue = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("csrftoken="))
-      ?.split("=")[1];
-    return cookieValue;
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -88,9 +91,7 @@ const PostOffer = () => {
       date_expire: dateExpire,
     };
 
-    const csrfToken = getCSRFToken();
-
-    fetch("http://localhost:8000/api/post-job/", {
+    fetch("http://localhost:8000/api/jobApi/", {
       method: "POST",
       credentials: "include",
       headers: {
@@ -180,9 +181,10 @@ const PostOffer = () => {
     setOpenEditModal(true);
   };
 
+
   const handleSave = (updatedJob) => {
     const csrfToken = getCSRFToken();
-    fetch(`http://localhost:8000/api/update-job/${updatedJob.id}/`, {
+    fetch(`http://localhost:8000/api/jobApi/${updatedJob.id}/`, {
       method: "PUT",
       credentials: "include",
       headers: {

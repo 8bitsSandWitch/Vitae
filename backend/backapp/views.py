@@ -4,9 +4,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from django.http import JsonResponse
-from .models import Utilisateur, Job, CV, Entreprise
+from .models import Utilisateur, Job, CV, Entreprise, JobApplication
 from .forms import RegisterForm
-from .serializers import UtilisateurSerializer, JobSerializer, CVSerializer, EntrepriseSerializer
+from .serializers import UtilisateurSerializer, JobSerializer, CVSerializer, EntrepriseSerializer, JobApplicationSerializer
 import logging
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
@@ -99,6 +99,7 @@ def register(request):
                 user = serializer.save()
                 user.type_utils = request.data['type_utils']
                 user.set_password(request.data['password'])
+                user.profile_picture = 'default.png'  # Set default profile picture
                 user.save()
                 # Assign the user to the appropriate group based on type_utils
                 if user.type_utils == 'job_applicant':
@@ -133,15 +134,18 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            user_data = UtilisateurSerializer(user)
+            user_data = UtilisateurSerializer(user).data
+            profile_picture = user_data['profile_picture']
+            profile_picture_url = f'src/components/IMG/{profile_picture}'
             
             return JsonResponse({
-                'id': user_data.data['id'],
-                'username': user_data.data['username'],
-                'first_name': user_data.data['first_name'],
-                'last_name': user_data.data['last_name'],
-                'email': user_data.data['email'],
-                'type_utils': user_data.data['type_utils'],
+                'id': user_data['id'],
+                'username': user_data['username'],
+                'first_name': user_data['first_name'],
+                'last_name': user_data['last_name'],
+                'email': user_data['email'],
+                'type_utils': user_data['type_utils'],
+                'profile_picture': profile_picture_url,
             }, status=200)
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=400)
@@ -188,39 +192,6 @@ def delete_cv(request, cv_id):
         logger.error(f"Error in delete_cv: {str(e)}")
         return JsonResponse({'error': 'An error occurred during CV deletion'}, status=500)
 
-@csrf_exempt
-@api_view(['DELETE'])
-@login_required
-def delete_job(request, job_id):
-    try:
-        job = Job.objects.get(id=job_id, user=request.user)
-        job.delete()
-        return JsonResponse({'message': 'Job deleted successfully'}, status=200)
-    except Job.DoesNotExist:
-        return JsonResponse({'error': 'Job not found'}, status=404)
-    except Exception as e:
-        logger.error(f"Error in delete_job: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during job deletion'}, status=500)
-
-@csrf_exempt
-@api_view(['PUT'])
-@login_required
-def update_job(request, job_id):
-    try:
-        job = get_object_or_404(Job, id=job_id, user=request.user)
-        data = request.data
-        job.title = data.get('title', job.title)
-        job.description = data.get('description', job.description)
-        job.keywords = data.get('keywords', job.keywords)
-        job.enterprise_name = data.get('enterprise_name', job.enterprise_name)
-        job.enterprise_email = data.get('enterprise_email', job.enterprise_email)
-        job.location = data.get('location', job.location)
-        job.date_expire = data.get('date_expire', job.date_expire)
-        job.save()
-        return JsonResponse({'message': 'Job updated successfully'}, status=200)
-    except Exception as e:
-        logger.error(f"Error in update_job: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during job update'}, status=500)
 
 @login_required
 @api_view(['GET'])
@@ -233,6 +204,7 @@ def get_uploaded_cvs(request):
         logger.error(f"Error in get_uploaded_cvs: {str(e)}")
         return JsonResponse({'error': 'An error occurred while fetching uploaded CVs'}, status=500)
 
+
 @api_view(['GET'])
 def get_all_users(request):
     try:
@@ -242,6 +214,7 @@ def get_all_users(request):
     except Exception as e:
         logger.error(f"Error in get_all_users: {str(e)}")
         return JsonResponse({'error': 'An error occurred while fetching all users'}, status=500)
+
 
 @api_view(['GET'])
 def get_user(request, user_id):
@@ -255,49 +228,7 @@ def get_user(request, user_id):
     except Exception as e:
         logger.error(f"Error in get_user: {str(e)}")
         return JsonResponse({'error': 'An error occurred while fetching the user'}, status=500)
-
-@csrf_exempt
-@api_view(['POST'])
-@login_required
-def post_job(request):
-    try:
-        data = request.data
-        logger.info(f"Received job data: {data}")  # Log the received data
-        job = Job.objects.create(
-            title=data['title'],
-            description=data['description'],
-            keywords=data['keywords'],
-            enterprise_name=data['enterprise_name'],
-            enterprise_email=data['enterprise_email'],
-            location=data['location'],
-            date_expire=data['date_expire'],
-            user=request.user  # Set the current user as the job poster
-        )
-        return JsonResponse({'message': 'Job posted successfully', 'id': job.id}, status=201)
-    except Exception as e:
-        logger.error(f"Error in post_job: {str(e)}")
-        return JsonResponse({'error': f'An error occurred during job posting: {str(e)}'}, status=500)
-
-@api_view(['GET'])
-def list_jobs(request):
-    try:
-        jobs = Job.objects.all()  # Fetch all job offers
-        serializer = JobSerializer(jobs, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        logger.error(f"Error in list_jobs: {str(e)}")
-        return JsonResponse({'error': 'An error occurred while fetching jobs'}, status=500)
-
-@login_required
-@api_view(['GET'])
-def get_user_jobs(request):
-    try:
-        jobs = Job.objects.filter(user=request.user)
-        serializer = JobSerializer(jobs, many=True)
-        return Response(serializer.data)
-    except Exception as e:
-        logger.error(f"Error in get_user_jobs: {str(e)}")
-        return JsonResponse({'error': 'An error occurred while fetching user jobs'}, status=500)
+    
 
 @csrf_exempt
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
@@ -338,21 +269,194 @@ def entrepriseApi(request, id=None):
         logging.error(f"Error in entrepriseApi: {str(e)}")
         return JsonResponse({'error': 'An error occurred'}, status=500)
 
+
+@csrf_exempt
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile_picture(request):
+    try:
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'error': 'User is not authenticated'}, status=401)
+        
+        if 'profile_picture' not in request.FILES:
+            return JsonResponse({'error': 'No profile picture uploaded'}, status=400)
+        
+        file = request.FILES['profile_picture']
+        file_name = default_storage.save(f'profile_pictures/{file.name}', ContentFile(file.read()))
+        file_url = default_storage.url(file_name)
+        
+        user.profile_picture = file_name  # Save only the file name
+        user.save()
+        
+        return JsonResponse({'message': 'Profile picture updated successfully', 'profile_picture': file_name}, status=200)
+    except Exception as e:
+        logger.error(f"Error in update_profile_picture: {str(e)}")
+        return JsonResponse({'error': 'An error occurred during profile picture update'}, status=500)
+
+
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def apply_for_job(request):
+    try:
+        job_id = request.data.get('job_id')
+        job = get_object_or_404(Job, id=job_id)
+        applicant = request.user
+
+        # Check if the user has already applied for the job
+        if JobApplication.objects.filter(job=job, applicant=applicant).exists():
+            return JsonResponse({'error': 'You have already applied for this job.'}, status=400)
+
+        job_application = JobApplication.objects.create(job=job, applicant=applicant)
+        serializer = JobApplicationSerializer(job_application)
+        return JsonResponse(serializer.data, status=201)
+    except Exception as e:
+        logger.error(f"Error in apply_for_job: {str(e)}")
+        return JsonResponse({'error': 'An error occurred during job application.'}, status=500)
+   
+@login_required
+@api_view(['GET', 'POST', 'PUT', 'DELETE']) 
+def jobApi(request, job_id=None):
+    try:
+        if request.method == 'GET':
+            if job_id is None:
+                jobs = Job.objects.all()
+                job_serializer = JobSerializer(jobs, many=True)
+            else:
+                try:
+                    job = Job.objects.get(id=job_id)
+                    job_serializer = JobSerializer(job)
+                except Job.DoesNotExist:
+                    return JsonResponse({'error': 'No Job Found'}, safe=False, status=404)
+            return JsonResponse(job_serializer.data, safe=False)
+        
+        elif request.method == 'POST':
+            try:
+                data = request.data
+                logger.info(f"Received job data: {data}")  # Log the received data
+                job = Job.objects.create(
+                    title=data['title'],
+                    description=data['description'],
+                    keywords=data['keywords'],
+                    enterprise_name=data['enterprise_name'],
+                    enterprise_email=data['enterprise_email'],
+                    location=data['location'],
+                    date_expire=data['date_expire'],
+                    user=request.user  # Set the current user as the job poster
+                )
+                return JsonResponse({'message': 'Job posted successfully'}, status=201)
+            except Exception as e:
+                logger.error(f"Error in post_job: {str(e)}")
+                return JsonResponse({'error': f'An error occurred during job posting: {str(e)}'}, status=500)
+        
+        elif request.method == 'PUT':
+            try:
+                job = get_object_or_404(Job, id=job_id, user=request.user)
+                data = request.data
+                job.title = data.get('title', job.title)
+                job.description = data.get('description', job.description)
+                job.keywords = data.get('keywords', job.keywords)
+                job.enterprise_name = data.get('enterprise_name', job.enterprise_name)
+                job.enterprise_email = data.get('enterprise_email', job.enterprise_email)
+                job.location = data.get('location', job.location)
+                job.date_expire = data.get('date_expire', job.date_expire)
+                job.save()
+                return JsonResponse({'message': 'Job updated successfully'}, status=200)
+            except Exception as e:
+                logger.error(f"Error in update_job: {str(e)}")
+                return JsonResponse({'error': 'An error occurred during job update'}, status=500)
+        
+        elif request.method == 'DELETE':
+            try: 
+                job = Job.objects.get(id=job_id)
+                job.delete()
+                return JsonResponse('Job Deleted Successfully', safe=False, status=201)
+            except Job.DoesNotExist:
+                return JsonResponse({'error': 'Job Not Found'}, safe=False, status=404)
+            
+    except Exception as e:
+        logger.error(f"Error in jobApi: {str(e)}")
+        return JsonResponse({'error': f'An error occurred in Job API: {str(e)}'}, status=500)
+    
+@login_required
+@api_view(['GET'])
+def get_user_jobs(request):
+    try:
+        logger.info(f"User: {request.user}")  # Log the user information
+        jobs = Job.objects.filter(user=request.user)
+        logger.info(f"Jobs: {jobs}")  # Log the jobs information
+        serializer = JobSerializer(jobs, many=True)
+        return Response(serializer.data)
+    except Exception as e:
+        logger.error(f"Error in get_user_jobs: {str(e)}")
+        return JsonResponse({'error': 'An error occurred while fetching user jobs'}, status=500)
+    
+@csrf_exempt
+@api_view(['DELETE'])
+@login_required
+def delete_job(request, job_id):
+    try:
+        job = Job.objects.get(id=job_id, user=request.user)
+        job.delete()
+        return JsonResponse({'message': 'Job deleted successfully'}, status=200)
+    except Job.DoesNotExist:
+        return JsonResponse({'error': 'Job not found'}, status=404)
+    except Exception as e:
+        logger.error(f"Error in delete_job: {str(e)}")
+        return JsonResponse({'error': 'An error occurred during job deletion'}, status=500)
+
+@csrf_exempt
+@api_view(['PUT'])
+@login_required
+def update_job(request, job_id):
+    try:
+        job = get_object_or_404(Job, id=job_id, user=request.user)
+        data = request.data
+        job.title = data.get('title', job.title)
+        job.description = data.get('description', job.description)
+        job.keywords = data.get('keywords', job.keywords)
+        job.enterprise_name = data.get('enterprise_name', job.enterprise_name)
+        job.enterprise_email = data.get('enterprise_email', job.enterprise_email)
+        job.location = data.get('location', job.location)
+        job.date_expire = data.get('date_expire', job.date_expire)
+        job.save()
+        return JsonResponse({'message': 'Job updated successfully'}, status=200)
+    except Exception as e:
+        logger.error(f"Error in update_job: {str(e)}")
+        return JsonResponse({'error': 'An error occurred during job update'}, status=500)
+
 urlpatterns = [
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    # Connexion API
+    path('api/login/', login_view, name='login_view'),
     path('register/', register, name='register'),
+    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    
+    # User API
     path('users/', get_all_users, name='get_all_users'),
     path('users/<int:user_id>/', get_user, name='get_user'),
-    path('api/login/', login_view, name='login_view'),
+    
+    # User Update API
+    path('api/update-profile-picture/', update_profile_picture, name='update_profile_picture'),
+    
+    # Entreprise API
+    path('api/entreprise/', entrepriseApi, name='entreprise_list'),
+    path('api/entreprise/<int:id>/', entrepriseApi, name='entreprise_detail'),
+    
+    # CV's API
     path('api/upload/', upload_cv, name='upload_cv'),
     path('api/uploaded-cvs/', get_uploaded_cvs, name='get_uploaded_cvs'),
     path('api/delete-cv/<int:cv_id>/', delete_cv, name='delete_cv'),
-    path('api/post-job/', post_job, name='post_job'),
-    path('api/jobs/', list_jobs, name='list_jobs'),
     path('api/filter-cv/', filter_cv, name='filter_cv'),
+    
+    # Job API
     path('api/user-jobs/', get_user_jobs, name='get_user_jobs'),
     path('api/delete-job/<int:job_id>/', delete_job, name='delete_job'),
     path('api/update-job/<int:job_id>/', update_job, name='update_job'),
-    path('api/entreprise/', entrepriseApi, name='entreprise_list'),
-    path('api/entreprise/<int:id>/', entrepriseApi, name='entreprise_detail'),
+    
+    path('api/jobApi/', jobApi, name='jobApi'),
+    path('api/jobApi/<int:job_id>/', jobApi, name='jobApi'),
+    
+    
+    path('api/apply-for-job/', apply_for_job, name='apply_for_job'),
 ]

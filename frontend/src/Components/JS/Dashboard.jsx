@@ -23,15 +23,32 @@ const Dashboard = () => {
     }
   }, []);
 
-  const handleApply = (jobId) => {
+  const handleApply = async (jobTitle, jobId) => {
     if (!user) {
       setSnackbar({ open: true, message: 'Please log in to apply for jobs.', severity: 'error' });
       return;
     }
 
-    // Handle the application process here
-    console.log(`User ${user.id} applied for job ${jobId}`);
-    setSnackbar({ open: true, message: `You have successfully applied for job ${jobId}`, severity: 'success' });
+    try {
+      const response = await fetch('http://localhost:8000/api/apply-for-job/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ job_id: jobId }),
+      });
+
+      if (response.ok) {
+        setSnackbar({ open: true, message: `You have applied to '${jobTitle}'`, severity: 'success' });
+      } else {
+        const data = await response.json();
+        setSnackbar({ open: true, message: data.error || 'An error occurred during job application.', severity: 'error' });
+      }
+    } catch (error) {
+      console.error('Error applying for job:', error);
+      setSnackbar({ open: true, message: 'An error occurred during job application.', severity: 'error' });
+    }
   };
 
   const handleCloseSnackbar = () => {

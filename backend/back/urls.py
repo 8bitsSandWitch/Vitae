@@ -18,12 +18,23 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework import routers
+from backapp.views import UtilisateurViewSet, JobViewSet, CVViewSet, EntrepriseViewSet, update_profile_picture, apply_for_job, login_view, register
+
+router = routers.DefaultRouter()
+router.register(r'utilisateurs', UtilisateurViewSet)
+router.register(r'jobs', JobViewSet)
+router.register(r'cvs', CVViewSet)
+router.register(r'entreprises', EntrepriseViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('backapp.urls')),  # Ensure this line is present
     path('', include('backapp.urls')),
-]
+    path('api/', include(router.urls)),
+    path('api/register/', register, name='register'),
+    path('api/login/', login_view, name='login_view'),
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('api/uploaded-cvs/', include('backapp.urls')),
+    path('api/update-profile-picture/', update_profile_picture, name='update_profile_picture'),
+    path('api/apply-for-job/', apply_for_job, name='apply_for_job'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

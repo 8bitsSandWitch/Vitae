@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import Snackbar from '@mui/material/Snackbar';
@@ -20,8 +20,19 @@ const Navbar = () => {
   const navbarRef = useRef(null);
   const [prevScrollPos, setPrevScrollPos] = useState(window.pageYOffset);
   const [visible, setVisible] = useState(true);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if the user is authenticated
+    const userData = localStorage.getItem("user");
+    if (!userData) {
+      navigate("/login");
+      return;
+    }
+    const parsedUser = JSON.parse(userData);
+    setUser(parsedUser);
+
     const handleLocationChange = () => {
       setActivePage(window.location.pathname);
     };
@@ -51,7 +62,7 @@ const Navbar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [prevScrollPos]);
+  }, [navigate, prevScrollPos]);
 
   useEffect(() => {
     const activeNavItem = document.querySelector(`.nav-item.active`);
@@ -97,22 +108,18 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               </li>
-              <li
-                className={`nav-item ${activePage === "/post" ? "active" : ""
-                  }`}
-              >
-                <Link
-                  className="nav-link"
-                  to="/post"
-                  onClick={() => setActivePage("/post")}
-                >
-                  Post Offer
-                </Link>
-              </li>
-              <li
-                className={`nav-item ${activePage === "/upload-cv" ? "active" : ""
-                  }`}
-              >
+              {user && user.type_utils !== "job_applicant" && (
+                <li className={`nav-item ${activePage === "/post" ? "active" : ""}`}>
+                  <Link
+                    className="nav-link"
+                    to="/post"
+                    onClick={() => setActivePage("/post")}
+                  >
+                    Post Offer
+                  </Link>
+                </li>
+              )}
+              <li className={`nav-item ${activePage === "/upload-cv" ? "active" : ""}`}>
                 <Link
                   className="nav-link"
                   to="/upload-cv"

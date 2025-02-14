@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import Utilisateur, Job, CV, Entreprise
+from .models import Utilisateur, Job, CV, Entreprise, JobApplication
 
 class UtilisateurSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = Utilisateur
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'type_utils', 'password']
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'type_utils', 'password', 'profile_picture']
 
     def create(self, validated_data):
         user = Utilisateur.objects.create_user(
@@ -31,4 +31,9 @@ class CVSerializer(serializers.ModelSerializer):
 class EntrepriseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Entreprise
+        fields = '__all__'
+
+class JobApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobApplication
         fields = '__all__'

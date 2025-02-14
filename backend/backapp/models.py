@@ -10,6 +10,7 @@ class Utilisateur(AbstractUser):
         ('default', 'Default'),
     ]
     type_utils = models.CharField(max_length=20, choices=TYPE_UTILS_CHOICES, default='default')
+    profile_picture = models.CharField(max_length=255, blank=True, default='default.png')  # Change to CharField # Add profile_picture field
     groups = models.ManyToManyField(
         Group,
         related_name='utilisateur_set',  # Add related_name attribute
@@ -68,6 +69,14 @@ class Job(models.Model):
 
     def __str__(self):
         return self.title
+
+class JobApplication(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    applicant = models.ForeignKey(Utilisateur, on_delete=models.CASCADE)
+    date_applied = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.applicant.username} applied for {self.job.title}"
 
 class CV(models.Model):
     name = models.CharField(max_length=255)

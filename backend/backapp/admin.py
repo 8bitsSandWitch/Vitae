@@ -5,17 +5,17 @@ from .models import Utilisateur, CV, Job, Experience, Education, Entreprise
 class UtilisateurAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'type_utils')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'type_utils', 'profile_picture')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'first_name', 'last_name', 'email', 'type_utils'),
+            'fields': ('username', 'first_name', 'last_name', 'email', 'type_utils', 'profile_picture'),
         }),
     )
-    list_display = ('username', 'email', 'first_name', 'last_name', 'type_utils', 'is_staff')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'type_utils', 'profile_picture', 'is_staff')
     search_fields = ('username', 'first_name', 'last_name', 'email')
     ordering = ('username',)
 

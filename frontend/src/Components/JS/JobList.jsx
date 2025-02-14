@@ -8,7 +8,7 @@ const JobList = ({ onApply }) => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const response = await fetch("http://localhost:8000/job-offers/", {
+        const response = await fetch("http://localhost:8000/api/jobApi/", {
           credentials: "include", // Include credentials in the request
         });
         if (response.ok) {
@@ -42,6 +42,7 @@ const JobList = ({ onApply }) => {
               keywords: Array.isArray(job.keywords) ? job.keywords : job.keywords.split(","),
             }}
             showActions={false} // Do not show delete and edit actions on the dashboard
+            onApply={onApply}
           />
         ))
       ) : (

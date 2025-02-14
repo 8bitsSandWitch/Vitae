@@ -2,10 +2,10 @@ import React from "react";
 import PropTypes from "prop-types";
 import "../CSS/jobcard.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrashAlt, faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faTrashAlt, faEdit, faBriefcase, faMapMarkerAlt, faCalendarAlt } from "@fortawesome/free-solid-svg-icons";
 import PostImg from '../IMG/picD.jpg'; // Import the image
 
-const JobCard = ({ job, onDelete, onEdit, showActions }) => {
+const JobCard = ({ job, onDelete, onEdit, showActions, onApply }) => {
   const keywords = Array.isArray(job.keywords) ? job.keywords : job.keywords.split(",");
 
   return (
@@ -21,12 +21,13 @@ const JobCard = ({ job, onDelete, onEdit, showActions }) => {
       </div>
       <div className="job-card-body">
         <img src={PostImg} alt="Job Image" className="job-image" />
-        <p><strong>Enterprise:</strong> {job.enterprise_name}</p>
+        <p><FontAwesomeIcon icon={faBriefcase} /> {job.enterprise_name}</p>
+        <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location}</p>
         <p><strong>Email:</strong> {job.enterprise_email}</p>
         <p><strong>Description:</strong> {job.description}</p>
         <p><strong>Keywords:</strong> {keywords.join(", ")}</p>
-        <p><strong>Location:</strong> {job.location}</p>
-        <p><strong>Expires on:</strong> {new Date(job.date_expire).toLocaleDateString()}</p>
+        <p><FontAwesomeIcon icon={faCalendarAlt} className="db-calendar"/> {new Date(job.date_expire).toLocaleDateString()}</p>
+        <button className="btn btn-primary" onClick={() => onApply(job.title, job.id)}>Apply</button>
       </div>
     </div>
   );
@@ -46,6 +47,7 @@ JobCard.propTypes = {
   onDelete: PropTypes.func,
   onEdit: PropTypes.func,
   showActions: PropTypes.bool,
+  onApply: PropTypes.func.isRequired,
 };
 
 JobCard.defaultProps = {
