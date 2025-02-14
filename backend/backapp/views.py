@@ -66,6 +66,7 @@ def assign_user_to_group(request, user_id, group_name):
         logger.error(f"Error in assign_user_to_group: {str(e)}")
         return JsonResponse({'error': 'An error occurred during usergroup assignment'}, status=500)
 
+
 @login_required
 @permission_required('backapp.add_cv', raise_exception=True)
 def add_cv(request):
@@ -75,6 +76,7 @@ def add_cv(request):
     except Exception as e:
         logger.error(f"Error in add_cv: {str(e)}")
         return JsonResponse({'error': 'An error occurred during permission checking'}, status=500)
+
 
 @login_required
 @permission_required('backapp.filter_cv', raise_exception=True)
@@ -88,41 +90,6 @@ def filter_cv(request):
         logger.error(f"Error in filter_cv: {str(e)}")
         return JsonResponse({'error': 'An error occurred while filtering CVs'}, status=500)
 
-@csrf_exempt
-@api_view(['POST'])
-def register(request):
-    try:
-        logger.info(f"Request data: {request.data}")  # Log the request data
-        if request.method == 'POST':
-            serializer = UtilisateurSerializer(data=request.data)
-            if serializer.is_valid():
-                user = serializer.save()
-                user.type_utils = request.data['type_utils']
-                user.set_password(request.data['password'])
-                user.profile_picture = 'default.png'  # Set default profile picture
-                user.save()
-                # Assign the user to the appropriate group based on type_utils
-                if user.type_utils == 'job_applicant':
-                    group_name = 'Job Applicants'
-                elif user.type_utils == 'job_poster':
-                    group_name = 'Job Posters'
-                else:
-                    group_name = 'Default Group'
-                
-                group, created = Group.objects.get_or_create(name=group_name)
-                user.groups.add(group)
-                response = JsonResponse({'message': 'User registered successfully'}, status=201)
-                response["Access-Control-Allow-Origin"] = "http://localhost:5173"
-                response["Access-Control-Allow-Credentials"] = "true"
-                return response
-            else:
-                response = JsonResponse({'errors': serializer.errors}, status=400)
-                response["Access-Control-Allow-Origin"] = "http://localhost:5173"
-                response["Access-Control-Allow-Credentials"] = "true"
-                return response
-    except Exception as e:
-        logger.error(f"Error in register: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during registration'}, status=500)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -153,6 +120,7 @@ def login_view(request):
         logger.error(f"Error in login_view: {str(e)}")
         return JsonResponse({'error': 'An error occurred during login'}, status=500)
 
+
 @csrf_exempt
 @api_view(['POST'])
 def upload_cv(request):
@@ -177,6 +145,7 @@ def upload_cv(request):
     except Exception as e:
         logger.error(f"Error in upload_cv: {str(e)}")
         return JsonResponse({'error': 'An error occurred during file upload'}, status=500)
+
 
 @csrf_exempt
 @api_view(['DELETE'])
@@ -204,32 +173,53 @@ def get_uploaded_cvs(request):
         logger.error(f"Error in get_uploaded_cvs: {str(e)}")
         return JsonResponse({'error': 'An error occurred while fetching uploaded CVs'}, status=500)
 
-
-@api_view(['GET'])
-def get_all_users(request):
+  
+@csrf_exempt
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile_picture(request):
     try:
-        users = Utilisateur.objects.all()
-        serializer = UtilisateurSerializer(users, many=True)
-        return Response(serializer.data)
+        user = request.user
+        if not user.is_authenticated:
+            return JsonResponse({'error': 'User is not authenticated'}, status=401)
+        
+        if 'profile_picture' not in request.FILES:
+            return JsonResponse({'error': 'No profile picture uploaded'}, status=400)
+        
+        file = request.FILES['profile_picture']
+        file_name = default_storage.save(f'profile_pictures/{file.name}', ContentFile(file.read()))
+        file_url = default_storage.url(file_name)
+        
+        user.profile_picture = file_name  # Save only the file name
+        user.save()
+        
+        return JsonResponse({'message': 'Profile picture updated successfully', 'profile_picture': file_name}, status=200)
     except Exception as e:
-        logger.error(f"Error in get_all_users: {str(e)}")
-        return JsonResponse({'error': 'An error occurred while fetching all users'}, status=500)
-
-
-@api_view(['GET'])
-def get_user(request, user_id):
-    try:
-        user = Utilisateur.objects.filter(id=user_id).first()
-        if user:
-            serializer = UtilisateurSerializer(user)
-            return Response(serializer.data)
-        else:
-            return JsonResponse({'error': 'User not found'}, status=404)
-    except Exception as e:
-        logger.error(f"Error in get_user: {str(e)}")
-        return JsonResponse({'error': 'An error occurred while fetching the user'}, status=500)
+        logger.error(f"Error in update_profile_picture: {str(e)}")
+        return JsonResponse({'error': 'An error occurred during profile picture update'}, status=500)  
     
 
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def apply_for_job(request):
+    try:
+        job_id = request.data.get('job_id')
+        job = get_object_or_404(Job, id=job_id)
+        applicant = request.user
+
+        # Check if the user has already applied for the job
+        if JobApplication.objects.filter(job=job, applicant=applicant).exists():
+            return JsonResponse({'error': 'You have already applied for this job.'}, status=400)
+
+        job_application = JobApplication.objects.create(job=job, applicant=applicant)
+        serializer = JobApplicationSerializer(job_application)
+        return JsonResponse(serializer.data, status=201)
+    except Exception as e:
+        logger.error(f"Error in apply_for_job: {str(e)}")
+        return JsonResponse({'error': 'An error occurred during job application.'}, status=500)
+ 
+ 
 @csrf_exempt
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 def entrepriseApi(request, id=None):
@@ -268,52 +258,79 @@ def entrepriseApi(request, id=None):
     except Exception as e:
         logging.error(f"Error in entrepriseApi: {str(e)}")
         return JsonResponse({'error': 'An error occurred'}, status=500)
-
-
+ 
 @csrf_exempt
-@api_view(['PUT'])
-@permission_classes([IsAuthenticated])
-def update_profile_picture(request):
+@login_required
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+def UtilisateurApi(request, user_id=None):
     try:
-        user = request.user
-        if not user.is_authenticated:
-            return JsonResponse({'error': 'User is not authenticated'}, status=401)
+        if request.method == 'GET':
+            if user_id is None:
+                utilisateurs = Utilisateur.objects.all()
+                utilisateur_serializer = UtilisateurSerializer(utilisateurs, many=True)
+                return JsonResponse(utilisateur_serializer.data, safe=False)
+            else:
+                try:
+                    utilisateur = Utilisateur.objects.get(id=user_id)
+                    utilisateur_serializer = UtilisateurSerializer(utilisateur)
+                    return JsonResponse(utilisateur_serializer.data, safe=False)
+                except Utilisateur.DoesNotExist:
+                    return JsonResponse({'error': 'User Not Found'}, safe=False, status=400)
         
-        if 'profile_picture' not in request.FILES:
-            return JsonResponse({'error': 'No profile picture uploaded'}, status=400)
+        elif request.method == 'POST':
+            try:
+                logger.info(f"Received data: {request.data}")  # Log the request data
+                serializer = UtilisateurSerializer(data=request.data)
+                if serializer.is_valid():
+                    user = serializer.save()
+                    user.type_utils = request.data['type_utils']
+                    user.set_password(request.data['password'])
+                    user.save()
+                    # Assign the user to the appropriate group based on type_utils
+                    if user.type_utils == 'job_applicant':
+                        group_name = 'Job Applicants'
+                    elif user.type_utils == 'job_poster':
+                        group_name = 'Job Posters'
+                    else:
+                        group_name = 'Default Group'
+                    
+                    group, created = Group.objects.get_or_create(name=group_name)
+                    user.groups.add(group)
+                    response = JsonResponse({'message': 'User registered successfully'}, status=201)
+                    response["Access-Control-Allow-Origin"] = "http://localhost:5173"
+                    response["Access-Control-Allow-Credentials"] = "true"
+                    return response
+                else:
+                    response = JsonResponse({'errors': serializer.errors}, status=400)
+                    response["Access-Control-Allow-Origin"] = "http://localhost:5173"
+                    response["Access-Control-Allow-Credentials"] = "true"
+                    return response
+            except Exception as e:
+                logger.error(f"Error during user registration: {str(e)}")
+                return JsonResponse({'error': 'An error occurred during user registration'}, status=500)
+    
+        elif request.method == 'PUT':
+            utilisateur_data = JSONParser().parse(request)
+            try:
+                utilisateur = Utilisateur.objects.get(id=user_id)
+                utilisateur_serializer = UtilisateurSerializer(utilisateur, data=utilisateur_data)
+                if utilisateur_serializer.is_valid():
+                    utilisateur_serializer.save()
+                    return JsonResponse(utilisateur_serializer.data, safe=False, status=200)
+                return JsonResponse(utilisateur_serializer.errors, safe=False, status=400)
+            except Utilisateur.DoesNotExist:
+                return JsonResponse({"error": "User Not Found"}, safe=False, status=400)
         
-        file = request.FILES['profile_picture']
-        file_name = default_storage.save(f'profile_pictures/{file.name}', ContentFile(file.read()))
-        file_url = default_storage.url(file_name)
-        
-        user.profile_picture = file_name  # Save only the file name
-        user.save()
-        
-        return JsonResponse({'message': 'Profile picture updated successfully', 'profile_picture': file_name}, status=200)
+        elif request.method == 'DELETE':
+            try:
+                utilisateur = Utilisateur.objects.get(id=user_id)
+                utilisateur.delete()
+                return JsonResponse("User Deleted Successfully", safe=False, status=200)
+            except Utilisateur.DoesNotExist:
+                return JsonResponse({"error": "Utilisateur non trouvé"}, safe=False, status=400)
     except Exception as e:
-        logger.error(f"Error in update_profile_picture: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during profile picture update'}, status=500)
-
-
-@csrf_exempt
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def apply_for_job(request):
-    try:
-        job_id = request.data.get('job_id')
-        job = get_object_or_404(Job, id=job_id)
-        applicant = request.user
-
-        # Check if the user has already applied for the job
-        if JobApplication.objects.filter(job=job, applicant=applicant).exists():
-            return JsonResponse({'error': 'You have already applied for this job.'}, status=400)
-
-        job_application = JobApplication.objects.create(job=job, applicant=applicant)
-        serializer = JobApplicationSerializer(job_application)
-        return JsonResponse(serializer.data, status=201)
-    except Exception as e:
-        logger.error(f"Error in apply_for_job: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during job application.'}, status=500)
+        logger.error(f'Error in Utilisateur API: {str(e)}')
+        return JsonResponse({'error': f'An error occured in Utilisateur API: {str(e)}'}, status=500)
    
 @login_required
 @api_view(['GET', 'POST', 'PUT', 'DELETE']) 
@@ -328,7 +345,7 @@ def jobApi(request, job_id=None):
                     job = Job.objects.get(id=job_id)
                     job_serializer = JobSerializer(job)
                 except Job.DoesNotExist:
-                    return JsonResponse({'error': 'No Job Found'}, safe=False, status=404)
+                    return JsonResponse({'error': 'No Job Found'}, safe=False, status=400)
             return JsonResponse(job_serializer.data, safe=False)
         
         elif request.method == 'POST':
@@ -373,10 +390,11 @@ def jobApi(request, job_id=None):
                 job.delete()
                 return JsonResponse('Job Deleted Successfully', safe=False, status=201)
             except Job.DoesNotExist:
-                return JsonResponse({'error': 'Job Not Found'}, safe=False, status=404)
+                logger.error(f"Error in delete_job: {str(e)}")
+                return JsonResponse({'error': 'Job Not Found'}, safe=False, status=400)
             
     except Exception as e:
-        logger.error(f"Error in jobApi: {str(e)}")
+        logger.error(f"Error in Job API: {str(e)}")
         return JsonResponse({'error': f'An error occurred in Job API: {str(e)}'}, status=500)
     
 @login_required
@@ -391,50 +409,15 @@ def get_user_jobs(request):
     except Exception as e:
         logger.error(f"Error in get_user_jobs: {str(e)}")
         return JsonResponse({'error': 'An error occurred while fetching user jobs'}, status=500)
-    
-@csrf_exempt
-@api_view(['DELETE'])
-@login_required
-def delete_job(request, job_id):
-    try:
-        job = Job.objects.get(id=job_id, user=request.user)
-        job.delete()
-        return JsonResponse({'message': 'Job deleted successfully'}, status=200)
-    except Job.DoesNotExist:
-        return JsonResponse({'error': 'Job not found'}, status=404)
-    except Exception as e:
-        logger.error(f"Error in delete_job: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during job deletion'}, status=500)
-
-@csrf_exempt
-@api_view(['PUT'])
-@login_required
-def update_job(request, job_id):
-    try:
-        job = get_object_or_404(Job, id=job_id, user=request.user)
-        data = request.data
-        job.title = data.get('title', job.title)
-        job.description = data.get('description', job.description)
-        job.keywords = data.get('keywords', job.keywords)
-        job.enterprise_name = data.get('enterprise_name', job.enterprise_name)
-        job.enterprise_email = data.get('enterprise_email', job.enterprise_email)
-        job.location = data.get('location', job.location)
-        job.date_expire = data.get('date_expire', job.date_expire)
-        job.save()
-        return JsonResponse({'message': 'Job updated successfully'}, status=200)
-    except Exception as e:
-        logger.error(f"Error in update_job: {str(e)}")
-        return JsonResponse({'error': 'An error occurred during job update'}, status=500)
 
 urlpatterns = [
     # Connexion API
     path('api/login/', login_view, name='login_view'),
-    path('register/', register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     
     # User API
-    path('users/', get_all_users, name='get_all_users'),
-    path('users/<int:user_id>/', get_user, name='get_user'),
+    path('api/Utilisateur/', UtilisateurApi, name='UtilisateurApi'),
+    path('api/Utilisateur/<int:user_id>/', UtilisateurApi, name='UtilisateurApi'),
     
     # User Update API
     path('api/update-profile-picture/', update_profile_picture, name='update_profile_picture'),
@@ -449,13 +432,10 @@ urlpatterns = [
     path('api/delete-cv/<int:cv_id>/', delete_cv, name='delete_cv'),
     path('api/filter-cv/', filter_cv, name='filter_cv'),
     
-    # Job API
-    path('api/user-jobs/', get_user_jobs, name='get_user_jobs'),
-    path('api/delete-job/<int:job_id>/', delete_job, name='delete_job'),
-    path('api/update-job/<int:job_id>/', update_job, name='update_job'),
-    
+    # Job API    
     path('api/jobApi/', jobApi, name='jobApi'),
     path('api/jobApi/<int:job_id>/', jobApi, name='jobApi'),
+    path('api/user-jobs/', get_user_jobs, name='get_user_jobs'),
     
     
     path('api/apply-for-job/', apply_for_job, name='apply_for_job'),

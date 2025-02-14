@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import '../CSS/dashboard.css';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
@@ -56,7 +55,8 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="dashboard_container main-content">
+    // main-content
+    <div className="dashboard_container">
       <div className="mb-4 dashboard_topTitle">
         <h1>Job Offers</h1>
         <form action="">

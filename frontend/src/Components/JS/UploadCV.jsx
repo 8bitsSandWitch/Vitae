@@ -189,8 +189,9 @@ const UploadCV = () => {
   };
 
   return (
+    // main-content
     <>
-      <div className="up-container main-content">
+      <div className="up-container">
         <div className="up-header">
           <h3>Your Uploaded CVs</h3>
           <button className="btn btn-primary" onClick={handleOpenModal}>

@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import routers
-from backapp.views import UtilisateurViewSet, JobViewSet, CVViewSet, EntrepriseViewSet, update_profile_picture, apply_for_job, login_view, register
+from backapp.views import *
 
 router = routers.DefaultRouter()
 router.register(r'utilisateurs', UtilisateurViewSet)
@@ -31,7 +31,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('backapp.urls')),
     path('api/', include(router.urls)),
-    path('api/register/', register, name='register'),
+
     path('api/login/', login_view, name='login_view'),
 
     path('api/uploaded-cvs/', include('backapp.urls')),

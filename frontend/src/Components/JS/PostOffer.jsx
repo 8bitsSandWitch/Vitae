@@ -143,7 +143,7 @@ const PostOffer = () => {
 
   const handleDelete = (jobId) => {
     const csrfToken = getCSRFToken();
-    fetch(`http://localhost:8000/api/delete-job/${jobId}/`, {
+    fetch(`http://localhost:8000/api/jobApi/${jobId}/`, {
       method: "DELETE",
       credentials: "include",
       headers: {
@@ -241,8 +241,9 @@ const PostOffer = () => {
   };
 
   return (
+    // main-content
     <>
-      <div className="up-container main-content">
+      <div className="up-container">
         <div className="up-header">
           <h3>Your Posted Jobs</h3>
           <button className="btn btn-primary" onClick={handleOpenModal}>

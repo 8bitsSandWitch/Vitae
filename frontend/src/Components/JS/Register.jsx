@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import '../CSS/register.css';
 import { Link } from 'react-router-dom';
 
@@ -31,7 +30,7 @@ const Register = () => {
       return;
     }
 
-    axios.post('http://localhost:8000/api/register/', {
+    axios.post('http://localhost:8000/api/Utilisateur/', {
       username: formData.username,
       email: formData.email,
       first_name: formData.first_name,

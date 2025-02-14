@@ -18,7 +18,8 @@ const FilterCV = () => {
   };
 
   return (
-    <div className="filter-cv-container main-content">
+    // main-content
+    <div className="filter-cv-containe">
       <h2>Filter CVs</h2>
       <form className="filter-form" onSubmit={handleSubmit}>
         <div className="form-group">

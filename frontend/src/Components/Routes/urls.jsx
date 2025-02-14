@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 
 // Import files to render
 import Login from "../JS/Login";
@@ -16,6 +11,7 @@ import UploadCV from "../JS/UploadCV";
 import JobList from "../JS/JobList";
 import FilterCV from "../JS/FilterCV";
 import Profile from "../JS/Profile";
+import Admin from '../JS/Admin/Panel'
 import ProtectedRoute from "./ProtectedRoute";
 
 const Urls = () => {
@@ -37,6 +33,7 @@ const Urls = () => {
         <Route path="/job-list" element={ <ProtectedRoute><JobList /></ProtectedRoute> } />
         <Route path="/filter-cv" element={ <ProtectedRoute><FilterCV /></ProtectedRoute> } />
         <Route path="/account" element={ <ProtectedRoute><Profile /></ProtectedRoute> } />
+        <Route path="/manage" element={ <ProtectedRoute><Admin /></ProtectedRoute> } />
       </Routes>
     </>
   );

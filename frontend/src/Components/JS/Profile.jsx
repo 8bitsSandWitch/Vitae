@@ -130,7 +130,7 @@ const Profile = () => {
       const csrfToken = getCSRFToken();
       const token = localStorage.getItem("token");
 
-      axios.put(`http://localhost:8000/api/users/${user.id}/`, formData, {
+      axios.put(`http://localhost:8000/api/Utilisateur/${user.id}/`, formData, {
         credentials: "include",
         headers: {
           "X-CSRFToken": csrfToken,
@@ -161,52 +161,56 @@ const Profile = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("first_name", firstName);
-    formData.append("last_name", lastName);
-    formData.append("username", username);
+    const formData = {
+      id: user.id,
+      first_name: firstName,
+      last_name: lastName,
+      username: username,
+      email: email, // Append email from localStorage
+      type_utils: user.type_utils,
+      profile_picture: profilePicture ? profilePicture.name : user.profile_picture.split('/').pop(),
+    };
 
     const csrfToken = getCSRFToken();
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:8000/api/users/${user.id}/`, {
-      method: "PUT",
-      credentials: "include",
-      headers: {
-        "X-CSRFToken": csrfToken,
-        "Authorization": `Bearer ${token}`,
-      },
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.id) {
-          setSnackbar({
-            open: true,
-            message: "Profile updated successfully.",
-            severity: "success",
-          });
-          // Update local storage with new user data
-          localStorage.setItem("user", JSON.stringify(data));
-        } else {
-          setSnackbar({
-            open: true,
-            message: "An error occurred during profile update.",
-            severity: "error",
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error updating profile:", error);
+    try {
+      const response = await axios.put(`http://localhost:8000/api/Utilisateur/${user.id}/`, formData, {
+        headers: {
+          "X-CSRFToken": csrfToken,
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.id) {
         setSnackbar({
           open: true,
-          message: "An error occurred during profile update.",
+          message: "Profile updated successfully.",
+          severity: "success",
+        });
+        // Update local storage with new user data
+        const updatedUser = { ...response.data, profile_picture: "src/Components/IMG/" + response.data.profile_picture };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+      } else {
+        setSnackbar({
+          open: true,
+          message: "An error occurred while storing profile update.",
           severity: "error",
         });
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setSnackbar({
+        open: true,
+        message: "An error occurred during profile update.",
+        severity: "error",
       });
+    }
   };
 
   const handleEnterpriseSubmit = (e) => {
@@ -263,7 +267,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="profile-container main-content">
+    // main-content
+    <div className="profile-container">
       <div className="profile-sb">
         <div className="profile-sb-header">
           <div className="profile-edit-img">
