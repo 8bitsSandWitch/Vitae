@@ -23,5 +23,9 @@ urlpatterns = [
     path('api/jobApi/<int:job_id>/', jobApi, name='jobApi'),
     path('api/user-jobs/', get_user_jobs, name='get_user_jobs'),
     
+    # Enterprise API path('api/enterprise/', entrepriseApi, name='entreprise_list'),
+    path('api/enterprise/', entrepriseApi, name='entreprise_list'),
+    path('api/enterprise/<int:id>/', entrepriseApi, name='entreprise_detail'),
+    
     path('', include(router.urls)),
 ]

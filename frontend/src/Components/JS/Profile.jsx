@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "../CSS/profile.css";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck, faEdit, faLock, faUserAltSlash } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faEdit, faUserEdit, faLock, faUserAltSlash } from "@fortawesome/free-solid-svg-icons";
 
 const Alert = React.forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -22,10 +22,10 @@ const Profile = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [profilePicture, setProfilePicture] = useState(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState(null);
-  const [enterpriseName, setEnterpriseName] = useState("");
-  const [enterpriseAddress, setEnterpriseAddress] = useState("");
-  const [enterpriseEmail, setEnterpriseEmail] = useState("");
-  const [enterpriseWebsite, setEnterpriseWebsite] = useState("");
+  const [enterpriseName, setEnterpriseName] = useState("Undefined");
+  const [enterpriseAddress, setEnterpriseAddress] = useState("Undefined");
+  const [enterpriseEmail, setEnterpriseEmail] = useState("Undefined");
+  const [enterpriseWebsite, setEnterpriseWebsite] = useState("Undefined");
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -48,6 +48,18 @@ const Profile = () => {
     setEmail(parsedUser.email || "");
     if (parsedUser.profile_picture) {
       setProfilePicturePreview(parsedUser.profile_picture);
+    }
+
+    // Retrieve enterprise details if user is a job_poster
+    if (parsedUser.type_utils === "job_poster") {
+      const enterpriseData = localStorage.getItem("enterprise");
+      if (enterpriseData) {
+        const parsedEnterprise = JSON.parse(enterpriseData);
+        setEnterpriseName(parsedEnterprise.name || "unset");
+        setEnterpriseAddress(parsedEnterprise.address || "unset");
+        setEnterpriseEmail(parsedEnterprise.email || "unset");
+        setEnterpriseWebsite(parsedEnterprise.website || "unset");
+      }
     }
   }, [navigate]);
 
@@ -213,10 +225,11 @@ const Profile = () => {
     }
   };
 
-  const handleEnterpriseSubmit = (e) => {
+  const handleEnterpriseSubmit = async (e) => {
     e.preventDefault();
 
     const formData = {
+      user: user.id,
       name: enterpriseName,
       address: enterpriseAddress,
       email: enterpriseEmail,
@@ -226,40 +239,39 @@ const Profile = () => {
     const csrfToken = getCSRFToken();
     const token = localStorage.getItem("token");
 
-    fetch("http://localhost:8000/api/entreprise/", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": csrfToken,
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.id) {
-          setSnackbar({
-            open: true,
-            message: "Enterprise details updated successfully.",
-            severity: "success",
-          });
-        } else {
-          setSnackbar({
-            open: true,
-            message: "An error occurred during enterprise update.",
-            severity: "error",
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error updating enterprise:", error);
+    try {
+      const response = await axios.post("http://localhost:8000/api/enterprise/", formData, {
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+          "Authorization": `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (response.data.id) {
+        setSnackbar({
+          open: true,
+          message: "Enterprise details updated successfully.",
+          severity: "success",
+        });
+        // Update local storage with new enterprise data
+        localStorage.setItem("enterprise", JSON.stringify(response.data));
+      } else {
         setSnackbar({
           open: true,
           message: "An error occurred during enterprise update.",
           severity: "error",
         });
+      }
+    } catch (error) {
+      console.error("Error updating enterprise:", error);
+      setSnackbar({
+        open: true,
+        message: "An error occurred during enterprise update.",
+        severity: "error",
       });
+    }
   };
 
   const handleCloseSnackbar = () => {
@@ -305,7 +317,7 @@ const Profile = () => {
         <form className="profile-form" onSubmit={handleSubmit}>
           <div className="profile-form-header">
             <div className="title-icon-group">
-              <FontAwesomeIcon icon={faEdit} className="profile-user-icon" />
+              <FontAwesomeIcon icon={faUserEdit} className="profile-user-icon" />
               <h2>Account Settings</h2>
             </div>
             <button type="submit">Save</button>
@@ -367,15 +379,15 @@ const Profile = () => {
 
           <div className="form-group">
             <label htmlFor="password">Current Password</label>
-            <input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <input type="password" id="password" placeholder="●●●●●●●●●" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div className="form-group">
             <label htmlFor="newPassword">New Password</label>
-            <input type="password" id="newPassword" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+            <input type="password" id="newPassword" placeholder="●●●●●●●●●" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
           </div>
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            <input type="password" id="confirmPassword" placeholder="●●●●●●●●●" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
         </form>
 

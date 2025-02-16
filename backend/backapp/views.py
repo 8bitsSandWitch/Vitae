@@ -104,8 +104,8 @@ def login_view(request):
             user_data = UtilisateurSerializer(user).data
             profile_picture = user_data['profile_picture']
             profile_picture_url = f'src/components/IMG/{profile_picture}'
-            
-            return JsonResponse({
+
+            response_data = {
                 'id': user_data['id'],
                 'username': user_data['username'],
                 'first_name': user_data['first_name'],
@@ -113,7 +113,27 @@ def login_view(request):
                 'email': user_data['email'],
                 'type_utils': user_data['type_utils'],
                 'profile_picture': profile_picture_url,
-            }, status=200)
+            }
+
+            if user_data['type_utils'] == 'job_poster':
+                try:
+                    enterprise = Entreprise.objects.get(user=user)
+                    enterprise_data = EntrepriseSerializer(enterprise).data
+                    response_data.update({
+                        'enterprise_name': enterprise_data['name'],
+                        'enterprise_address': enterprise_data['address'],
+                        'enterprise_email': enterprise_data['email'],
+                        'enterprise_website': enterprise_data['website'],
+                    })
+                except Entreprise.DoesNotExist:
+                    response_data.update({
+                        'enterprise_name': None,
+                        'enterprise_address': None,
+                        'enterprise_email': None,
+                        'enterprise_website': None,
+                    })
+
+            return JsonResponse(response_data, status=200)
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=400)
     except Exception as e:
@@ -219,8 +239,49 @@ def apply_for_job(request):
         logger.error(f"Error in apply_for_job: {str(e)}")
         return JsonResponse({'error': 'An error occurred during job application.'}, status=500)
  
- 
 @csrf_exempt
+@api_view(['GET', 'POST', 'PUT', 'DELETE'])
+def entrepriseApi(request, id=None):
+    try:
+        if id is None:
+            if request.method == 'GET':
+                entreprises = Entreprise.objects.all()
+                serializer = EntrepriseSerializer(entreprises, many=True)
+                return JsonResponse(serializer.data, safe=False)
+            
+            elif request.method == 'POST':
+                logger.info(f"Received POST data: {request.body}")  # Log the raw request body
+                data = JSONParser().parse(request)
+                logger.info(f"Parsed POST data: {data}")  # Log the parsed data
+                serializer = EntrepriseSerializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return JsonResponse(serializer.data, status=201)
+                return JsonResponse(serializer.errors, status=400)
+        else:
+            entreprise = get_object_or_404(Entreprise, id=id)
+            
+            if request.method == 'GET':
+                serializer = EntrepriseSerializer(entreprise)
+                return JsonResponse(serializer.data)
+            
+            elif request.method == 'PUT':
+                logger.info(f"Received PUT data: {request.body}")  # Log the raw request body
+                data = JSONParser().parse(request)
+                logger.info(f"Parsed PUT data: {data}")  # Log the parsed data
+                serializer = EntrepriseSerializer(entreprise, data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    return JsonResponse(serializer.data)
+                return JsonResponse(serializer.errors, status=400)
+            
+            elif request.method == 'DELETE':
+                entreprise.delete()
+                return JsonResponse({'message': 'Entreprise deleted successfully'}, status=204)
+    except Exception as e:
+        logger.error(f"Error in entrepriseApi: {str(e)}")
+        return JsonResponse({'error': 'An error occurred'}, status=500)
+
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 def entrepriseApi(request, id=None):
     try:
@@ -423,8 +484,8 @@ urlpatterns = [
     path('api/update-profile-picture/', update_profile_picture, name='update_profile_picture'),
     
     # Entreprise API
-    path('api/entreprise/', entrepriseApi, name='entreprise_list'),
-    path('api/entreprise/<int:id>/', entrepriseApi, name='entreprise_detail'),
+    path('api/enterprise/', entrepriseApi, name='entreprise_list'),
+    path('api/enterprise/<int:id>/', entrepriseApi, name='entreprise_detail'),
     
     # CV's API
     path('api/upload/', upload_cv, name='upload_cv'),

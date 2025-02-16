@@ -26,3 +26,11 @@ Internal Server Error: /api/Utilisateur/2/
 "PUT /api/Utilisateur/2/ HTTP/1.1" 500 110
 Internal Server Error: /api/Utilisateur/2/
 "PUT /api/Utilisateur/2/ HTTP/1.1" 500 110
+Internal Server Error: /api/enterprise/
+"POST /api/enterprise/ HTTP/1.1" 500 30
+Internal Server Error: /api/enterprise/
+"POST /api/enterprise/ HTTP/1.1" 500 30
+Internal Server Error: /api/enterprise/
+"POST /api/enterprise/ HTTP/1.1" 500 30
+Internal Server Error: /api/enterprise/
+"POST /api/enterprise/ HTTP/1.1" 500 30
